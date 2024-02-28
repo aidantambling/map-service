@@ -1,0 +1,227 @@
+{
+"Buttons": {
+    "All" : {
+        "populationDataBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0001C&for=county:*",
+            "title" : "Population",
+            "description" : "Population data for the general population.",
+            "round" : 5000,
+            "sliderConfig" : {
+                "max" : "100000",
+                "step" : "5000"
+            }
+        }
+    },
+    "Gender": {
+        "maleDataBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0025C&for=county:*",
+            "title" : "Male Population",
+            "description" : "Population data for males.",
+            "round" : 5000,
+            "sliderConfig" : {
+                "max" : "100000",
+                "step" : "5000"
+            }
+        },
+        "femaleDataBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0049C&for=county:*",
+            "title" : "Female Population",
+            "description" : "Population data for females.",
+            "round" : 5000,
+            "sliderConfig" : {
+                "max" : "100000",
+                "step" : "5000"
+            }
+        }
+    },
+    "Median Age" : {
+        "medianAgeBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0073C&for=county:*",
+            "title" : "Median Age",
+            "description" : "Median age of general population.",
+            "round" : 1,
+            "sliderConfig" : {
+                "max" : "70",
+                "step" : "1"
+            }
+        },
+        "femaleMedianAgeBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0075C&for=county:*",
+            "title" : "Female Median Age",
+            "description" : "Median age of female population.",
+            "round" : 1,
+            "sliderConfig" : {
+                "max" : "70",
+                "step" : "1"
+            }
+        },
+        "maleMedianAgeBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0074C&for=county:*",
+            "title" : "Male Median Age",
+            "description" : "Median age of male population.",
+            "round" : 1,
+            "sliderConfig" : {
+                "max" : "70",
+                "step" : "1"
+            }
+        }
+    },
+    "Race" : {
+        "whiteBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0078C&for=county:*",
+            "title" : "White Population",
+            "description" : "Population data for white people.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "100000",
+                "step" : "5000"
+            }
+        },
+        "blackBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0079C&for=county:*",
+            "title" : "Black Population",
+            "description" : "Population data for black people.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "75000",
+                "step" : "2500"
+            }
+        },
+        "amerindianBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0080C&for=county:*",
+            "title" : "American Indian and Alaska Native Population",
+            "description" : "Population data for American Indian and Alaska Native people.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "40000",
+                "step" : "2000"
+            }
+        },
+    
+        "asianBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0081C&for=county:*",
+            "title" : "Asian Population",
+            "description" : "Population data for Asian people.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "75000",
+                "step" : "2500"
+            }
+        },
+        "islanderBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0082C&for=county:*",
+            "title" : "Native Hawaiian and Other Pacific Islander Population",
+            "description" : "Population data for Native Hawaiian and Other Pacific Islanders.",
+            "round" : 1,
+            "sliderConfig" : {
+                "max" : "25000",
+                "step" : "1000"
+            }
+        },
+        "otherRaceBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0083C&for=county:*",
+            "title" : "Some Other Race Population",
+            "description" : "Population data for those who identified as some other race.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "50000",
+                "step" : "2500"
+            }
+        },
+        "twoRacesBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0084C&for=county:*",
+            "title" : "Two or More Races Population",
+            "description" : "Population data for those who identified as two or more races.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "50000",
+                "step" : "2500"
+            }
+        },
+        "hispanicBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0096C&for=county:*",
+            "title" : "Hispanic (of Any Race) Population",
+            "description" : "Population data for Hispanics.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "100000",
+                "step" : "5000"
+            }
+        }
+    },
+    "Sexuality" : {
+        "oppSpouseBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0115C&for=county:*",
+            "title" : "Population with an Opposite-Sex Spouse",
+            "description" : "Population data for residents with an opposite-sex spouse.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "100000",
+                "step" : "5000"
+            }
+        },
+        "sameSpouseBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0116C&for=county:*",
+            "title" : "Population with a Same-Sex Spouse",
+            "description" : "Population data for residents with an opposite-sex spouse.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "5000",
+                "step" : "250"
+            }
+        },
+        "oppPartnerBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0117C&for=county:*",
+            "title" : "Population with an Opposite-Sex Partner",
+            "description" : "Population data for residents with an unmarried opposite-sex partner.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "50000",
+                "step" : "2500"
+            }
+        },
+        "samePartnerBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0118C&for=county:*",
+            "title" : "Population with a Same-Sex Partner",
+            "description" : "Population data for residents with an unmarried same-sex partner.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "2500",
+                "step" : "100"
+            }
+        }
+    },
+    "Institutionalized" : {
+        "instiBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0126C&for=county:*",
+            "title" : "Institutionalized Population",
+            "description" : "Population data for residents who are institutionalized in group quarters.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "10000",
+                "step" : "500"
+            }
+        },
+        "maleInstiBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0127C&for=county:*",
+            "title" : "Male Institutionalized Population",
+            "description" : "Population data for male residents who are institutionalized in group quarters.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "10000",
+                "step" : "500"
+            }
+        },
+        "femaleInstiBtn" : {
+            "url" : "https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0128C&for=county:*",
+            "title" : "Female Institutionalized Population",
+            "description" : "Population data for female residents who are institutionalized in group quarters.",
+            "round" : 5,
+            "sliderConfig" : {
+                "max" : "10000",
+                "step" : "500"
+            }
+        }
+    }
+ }
+}
