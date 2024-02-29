@@ -96,7 +96,7 @@
             display: flex;
             flex-direction: row;
 
-            #quartileButton, #sliderButton {
+            #quartileButton, #sliderButton, #comparisonButton {
                 background-color: #305555;
                 color: #FDF1E7;
                 width: 50%;
@@ -106,9 +106,13 @@
                 border-radius: 5px;
             }
 
-            #quartileButton:hover, #sliderButton:hover {
+            #quartileButton:hover, #sliderButton:hover, #comparisonButton:hover {
                 background-color: #213a3a;
                 cursor: pointer;
+            }
+
+            .active-mode-btn {
+                background-color: red !important ;
             }
         }
 
@@ -121,6 +125,8 @@
             #legend-labels{
                 /* background-color: red; */
                 width: 90%;
+                max-height: 100%;
+                height: 100%;
                 margin-left: 5%;
                 padding: 0px; /*Has right padding of 40px for some reason. TODO: Find source and fix*/
                 
@@ -140,10 +146,9 @@
             
             #sliderBox {
                 margin-top: 10%;
-                height: 10%;
+                height: 100%;
                 width: 100%;
                 display: flex;
-                display: none;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;

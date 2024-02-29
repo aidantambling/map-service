@@ -55,13 +55,13 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         updateLegend(cutoffs);
     }, [cutoffs]); // Add `cutoffs` as a dependency
 
-    const updateDataset = async (url) => {
-        const populationResponse = await d3.json(url);
-        setPopulationData(populationResponse.slice(1));
-        const newCutoffs = getCutoffPoints(populationResponse.slice(1));
-        setCutoffs(newCutoffs);
-        updateLegend(cutoffs);
-    }
+    // const updateDataset = async (url) => {
+    //     const populationResponse = await d3.json(url);
+    //     setPopulationData(populationResponse.slice(1));
+    //     const newCutoffs = getCutoffPoints(populationResponse.slice(1));
+    //     setCutoffs(newCutoffs);
+    //     updateLegend(cutoffs);
+    // }
 
     function getCutoffPoints(data) {
         const values = data.map(d => +d[2]).sort((a, b) => a - b);

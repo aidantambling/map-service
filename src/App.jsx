@@ -5,21 +5,23 @@ import './App.scss';
 import Canvas from './components/Canvas';
 
 const App = () => {
+    // tooltips
     const tooltipCountyRef = useRef(null);
     const tooltipStatRef = useRef(null);
 
     const containerRef = useRef(null);
     const [scrollPosition, setScrollPosition] = useState((0));
 
+    const [buttonData, setButtonData] = useState([]);
     const buttonsRef = useRef(null);
 
     const [legendData, setLegendData] = useState([]);
     const [keywordToInfo, setKeywordToInfo] = useState(null)
 
-    const [buttonData, setButtonData] = useState([]);
-
     const [populationURL, setPopulationURL] = useState('https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0001C&for=county:*');
 
+    const [viewingMode, setViewingMode] = useState('quartile');
+    const [sliderVal, setSliderVal] =useState(0);
     useEffect(() => {
         fetch('/apis.json') // Path relative to the public directory
             .then(response => response.json())
@@ -54,6 +56,31 @@ const App = () => {
         setButtonData(newButtonData);
     }
 
+    function renderQuartileData() {
+        return (
+            <div>
+                {legendData.map((item, index) => (
+                    <li key={index} id="legend-element">
+                        <span style={{ backgroundColor: item.color , width: '2rem' , height: '2rem', marginRight: '10%', display: 'flex' }}></span>
+                        {item.label}
+                    </li>
+                ))}
+            </div>
+        )
+    }
+
+    function renderSliderData(){
+        // render only below x, above x, and no dta (3 labels)
+        // render the slider
+        console.log(sliderVal)
+        return (
+        <div id='sliderBox'>
+            <input type="range" id="slider" name="slider" min="0" max="100000" step="5000" onChange={(value) => setSliderVal(value)}/>
+            <div id="sliderValue"></div>
+        </div>
+        );
+    }
+
     return (
         <>
             <div id="titleContainer">
@@ -72,21 +99,17 @@ const App = () => {
                         <div id='tooltip-stat' ref={tooltipStatRef}></div>
                     </div>
                     <div id="viewChanger">
-                        <button id="quartileButton" className="active">Quartile View</button>
-                        <button id="sliderButton">Slider View</button>
+                        <button id="quartileButton" className={viewingMode === 'quartile' ? 'active-mode-btn' : ''} onClick={() => setViewingMode('quartile')}>Quartile View</button>
+                        <button id="sliderButton" className={viewingMode === 'slider' ? 'active-mode-btn' : ''}onClick={() => setViewingMode('slider')}>Slider View</button>
+                        <button id="comparisonButton" className={viewingMode === 'comparison' ? 'active-mode-btn' : ''}onClick={() => setViewingMode('comparison')}>Comparison View</button>
                     </div>
                     <div id="legend-scale">
                         <ul id='legend-labels'>
-                            {legendData.map((item, index) => (
-                                <li key={index} id="legend-element">
-                                    <span style={{ backgroundColor: item.color , width: '2rem' , height: '2rem', marginRight: '10%', display: 'flex' }}></span>
-                                    {item.label}
-                                </li>
-                            ))}
+                            {viewingMode === 'quartile' && <div className="content" style={{height: '100%'}}>{renderQuartileData()}</div>}
+                            {viewingMode === 'slider' && <div className="content" style={{height: '100%'}}>{renderSliderData()}</div>}
+                            {viewingMode === 'comparison' && <div className="content" style={{height: '100%'}}>TBD</div>}
+
                         </ul>
-                        <div id="sliderBox">
-                            <div id="sliderValue">Loading....</div>
-                        </div>
                     </div>
                     <div id='description'>Loading....</div>
                     <div id="selectionContainer">
@@ -103,8 +126,6 @@ const App = () => {
                     </div>
                     <div id="boxContainer">
                         <div id="buttonBox" ref={buttonsRef}>
-                            {/* <button id="populationDataBtn" className="datasetButton">Population</button>
-                            <button id="maleDataBtn" className="datasetButton" onClick={() => setPopulationURL('https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0025C&for=county:*')}>Population</button> */}
                             {buttonData.map((item, index) => (
                                 <button key={index} className="datasetButton" id={item.id} onClick={() => setPopulationURL(item.url)}>
                                     {item.label}
