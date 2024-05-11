@@ -31,15 +31,17 @@ export function generateRaceGroupSchema(race) {
 // obtain a schema for the gender sub-groups (the APIs are predictable so it is simpler to conditionally render this way, instead of storing in the .json file)
 export function generateAgeGroupSchema(gender, offset) {
     const schema = {};
+    const genderPrefix = gender === "Male" ? "M" : "F"; // Add a gender prefix
+
     for (let i = 0; i < 18; i++) {
         let key, title;
         if (i < 17) {
             const ageStart = i * 5;
             const ageEnd = ageStart + 4;
-            key = `${ageStart}-${ageEnd}`;
-            title = `${gender} population ${key} years old`;
+            key = `${genderPrefix}${ageStart}-${ageEnd}`;
+            title = `${gender} population ${key.slice(1)} years old`;
         } else {
-            key = "85+";
+            key = `${genderPrefix}85+`;
             title = `${gender} population 85 years or older`;
         }
 
@@ -47,7 +49,7 @@ export function generateAgeGroupSchema(gender, offset) {
         schema[key] = {
             url: `https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_00${(offset + i).toString().padStart(2, '0')}C&for=county:*`,
             title: title,
-            description: `Population data for ${gender.toLowerCase()}s ${key} years old.`,
+            description: `Population data for ${gender.toLowerCase()}s ${key.slice(1)} years old.`,
             round: roundValue,
             sliderConfig : {
                 max : 'any',
