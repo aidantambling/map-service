@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import './canvas.scss';
 
-const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL, sliderVal, viewingMode }) => {
+const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL, sliderVal, viewingMode, countOrPercentage, setCountOrPercentage, setSliderMax, setSliderStep }) => {
     const [countyData, setCountyData] = useState([]);
     const [populationData, setPopulationData] = useState([]);
     const [cutoffs, setCutoffs] = useState([]);
@@ -38,13 +38,42 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 const populationResponse = await d3.json(populationURL);
                 setPopulationData(populationResponse.slice(1));
 
-                const roundMatrix = [1, 100, 1000, 2500, 5000, 10000];
+                const values = populationResponse.slice(1).map(d => +d[2]);
+                let highQuantile;
+                if (countOrPercentage == 'Count') {
+                    const maxVal = Math.max(...values);
+                    highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95) / 20) * 20;
+                }
+                else {
+                    highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95));
+                }
+                // highQuantile = Math.ceil(highQuantile / 20) * 20;
+                // console.log('MaxVal', maxVal);
+                // console.log('HighQuant', highQuantile);
+                console.log('Setting sliderMax: ', highQuantile);
+                console.log('Setting sliderStep: ', highQuantile / 20);
+                setSliderMax(highQuantile);
+                setSliderStep(highQuantile / 20);
+
+
+                let roundMatrix;
+                if (countOrPercentage == 'Count') {
+                    roundMatrix = [1, 100, 1000, 2500, 5000, 10000];
+                }
+                else {
+                    roundMatrix = [1, 0.1, 0.01];
+                }
                 // use the largest roundValue that is sufficiently balanced (score < 1000)
                 let optimalVal = -1;
                 let optimalScore = -1;
                 roundMatrix.forEach(roundVal => {
                     const newCutoffs = getCutoffPoints(populationResponse.slice(1), roundVal);
                     console.log('Rounding to ', roundVal, ': ', newCutoffs);
+                    if (countOrPercentage == 'Percentage' && newCutoffs[1] == 100 && newCutoffs[1] == newCutoffs[2] && newCutoffs[2] == newCutoffs[3] && newCutoffs[3] == newCutoffs[4]) {
+                        console.log('Meaningless percentages');
+                        //TODO: display popup saying that percentage not available for this
+                        setCountOrPercentage('Count')
+                    }
                     const newScore = getCountyDistribution(populationResponse.slice(1), newCutoffs);
                     if (optimalVal == -1 || newScore < 1000 || newScore < optimalScore) { // if score is uninit, take the score. or, take the highest roundval with reasonable score
                         optimalVal = roundVal;
@@ -91,14 +120,20 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         // cutoffs unnecessary - split by slider value
         if (viewingMode === 'slider') {
             const colors = ['limegreen', 'tomato'];
+            let aboveLabel = `Above ${sliderVal.toLocaleString()}`;
+            let belowLabel = `Below ${sliderVal.toLocaleString()}`;
+            if (countOrPercentage === 'Percentage') {
+                aboveLabel += '%';
+                belowLabel += '%';
+            }
             newLegendData = [
                 {
                     color: colors[0],
-                    label: `Above ${sliderVal.toLocaleString()}`
+                    label: aboveLabel
                 },
                 {
                     color: colors[1],
-                    label: `Below ${sliderVal.toLocaleString()}`
+                    label: belowLabel
                 },
                 {
                     color: 'black',
@@ -129,6 +164,9 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                             keyMessage = `More than ${cutoff.toLocaleString()}`;
                         } else {
                             keyMessage = `${cutoff.toLocaleString()} to ${cutoffs[index + 1]?.toLocaleString()}`;
+                        }
+                        if (countOrPercentage == 'Percentage') {
+                            keyMessage += '%';
                         }
                         return {
                             color: colors[index],
