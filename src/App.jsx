@@ -14,7 +14,11 @@ const App = () => {
     // tooltip refs - passed to Canvas.jsx for value assignment based on mouse-over
     const tooltipCountyRef = useRef(null);
     const tooltipStatRef = useRef(null);
-    
+
+    // slider state values
+    const [sliderMax, setSliderMax] = useState(100000);
+    const [sliderStep, setSliderStep] = useState(5000);
+
     // used to facilitate scroll over dataset class buttons
     const containerRef = useRef(null);
     const [scrollPosition, setScrollPosition] = useState((0));
@@ -36,8 +40,8 @@ const App = () => {
 
     // changing the view mode
     const [viewingMode, setViewingMode] = useState('quartile');
-    const [tempSliderVal, setTempSliderVal] =useState(0);
-    const [sliderVal, setSliderVal] =useState(0);
+    const [tempSliderVal, setTempSliderVal] = useState(0);
+    const [sliderVal, setSliderVal] = useState(0);
 
     // initial fetch of API data
     useEffect(() => {
@@ -45,7 +49,7 @@ const App = () => {
             .then(response => response.json())
             .then(jsonData => setKeywordToInfo(jsonData.Buttons))
             .catch(error => console.error('Error fetching data:', error));
-        }, []);
+    }, []);
 
     // when API is confirmed as fetched, or is changed (?), render the 'All" dataset buttons
     useEffect(() => {
@@ -54,12 +58,16 @@ const App = () => {
             setDataDescription(keywordToInfo["All"]["populationDataBtn"].description);
             setDataTitle(keywordToInfo["All"]["populationDataBtn"].title);
         }
-    }, [keywordToInfo]); 
-        
+    }, [keywordToInfo]);
+
+    useEffect(() => {
+        setSliderVal("0");
+    }, [populationURL])
+
     // scroll thru the dataset class buttons
     const handleScroll = (scrollAmount) => {
         const newScrollPosition = scrollPosition + scrollAmount;
-        if (newScrollPosition > 0 && newScrollPosition < 600){
+        if (newScrollPosition > 0 && newScrollPosition < 600) {
             setScrollPosition(newScrollPosition);
         }
 
@@ -72,7 +80,7 @@ const App = () => {
             <div>
                 {legendData.map((item, index) => (
                     <li key={index} id="legend-element">
-                        <span style={{ backgroundColor: item.color , width: '2rem' , height: '2rem', marginRight: '10%', display: 'flex' }}></span>
+                        <span style={{ backgroundColor: item.color, width: '2rem', height: '2rem', marginRight: '10%', display: 'flex' }}></span>
                         {item.label}
                     </li>
                 ))}
@@ -81,14 +89,34 @@ const App = () => {
     }
 
     // load the legend (same as quartile view - the legend has alr been updated via useEffect in Canvas.jsx), and load the slider itself as well
-    function renderSliderData(){
+    function renderSliderData() {
+
+        // const values = data.map(d => +d[2]);
+        // const maxVal = Math.max(...values);
+        // console.log(maxVal);
+        // console.log(sliderMax.toString());
+        // console.log(sliderStep.toString());
+        let renderSliderVal = sliderVal;
+        console.log(countOrPercentage)
+        if (countOrPercentage === 'Percentage') {
+            renderSliderVal += "%";
+        }
+
         return (
             <>
                 {renderQuartileData()}
                 <div id='sliderBox'>
-                    <input className="slider" type="range" id="slider" name="slider" min="0" max="100000" step="5000" onChange={(v) => setSliderVal(v.target.value)}/>
-                    <button className="dataset-class-button" onClick={() => setSliderVal(tempSliderVal)}>Submit</button>
-                    <div id="sliderValue">{tempSliderVal}</div>
+                    <input className="slider"
+                        type="range"
+                        id="slider"
+                        name="slider"
+                        min="0"
+                        max={sliderMax.toString()}
+                        step={sliderStep.toString()}
+                        value={sliderVal}
+                        onChange={(v) => setSliderVal(v.target.value)} />
+                    {/* <button className="dataset-class-button" onClick={() => setSliderVal(tempSliderVal)}>Submit</button> */}
+                    <div id="sliderValue">{renderSliderVal}</div>
                 </div>
             </>
         );
@@ -120,11 +148,11 @@ const App = () => {
         setActiveDatasetButton(item.id); // set the dataset button as active
 
         // for a dataset button w/ no children, just render the map and update the display
-        if (item.id !== "maleDataBtn" && item.id !== "femaleDataBtn" && item.id !== "hispanicBtn" ){
+        if (item.id !== "maleDataBtn" && item.id !== "femaleDataBtn" && item.id !== "hispanicBtn") {
             configurePopulationURL(item.url);
             setDataDescription(item.description);
             setDataTitle(item.label);
-            console.log(item);
+            // console.log(item);
             return;
         }
 
@@ -134,7 +162,7 @@ const App = () => {
             const gender = item.id === "maleDataBtn" ? "Male" : "Female";
             const offset = item.id === "maleDataBtn" ? 26 : 50;
             schema = generateAgeGroupSchema(gender, offset);
-        } else if (item.id === "hispanicBtn"){
+        } else if (item.id === "hispanicBtn") {
             schema = generateRaceGroupSchema("Hispanic");
         }
 
@@ -144,7 +172,7 @@ const App = () => {
             label: `All ${item.label}`, // Label for the 'All' button
             desc: `All ${item.description}` // Description for the 'All' button
         }];
-        
+
         newButtonData.push(...Object.keys(schema).map(key => ({
             id: key,
             url: schema[key].url,
@@ -153,7 +181,7 @@ const App = () => {
         })));
 
         // If the item already has children displayed and we click it again, we want to collapse the sub-menu - remove the children from the new data
-        if (item.children && item.children.length > 0){
+        if (item.children && item.children.length > 0) {
             item.children = [];
             newButtonData = [];
         }
@@ -162,17 +190,17 @@ const App = () => {
                 return { ...button, children: newButtonData };
             }
             return button;
-        });    
+        });
         setButtonData(updatedButtonData);
     }
 
     // abstracting useState setPopulationURL to adjust the API access based on whether we are in count or percent mode
     const configurePopulationURL = (url) => {
         console.log(countOrPercentage)
-        if (countOrPercentage === "Percentage"){
+        if (countOrPercentage === "Percentage") {
             url = url.replace('C&for', 'P&for');
         }
-        else if (countOrPercentage === "Count"){
+        else if (countOrPercentage === "Count") {
             url = url.replace('P&for', 'C&for');
         }
         setPopulationURL(url);
@@ -185,23 +213,23 @@ const App = () => {
 
     const responsive = {
         superLargeDesktop: {
-          // the naming can be any, depends on you.
-          breakpoint: { max: 4000, min: 3000 },
-          items: 5
+            // the naming can be any, depends on you.
+            breakpoint: { max: 4000, min: 3000 },
+            items: 5
         },
         desktop: {
-          breakpoint: { max: 3000, min: 1024 },
-          items: 3
+            breakpoint: { max: 3000, min: 1024 },
+            items: 3
         },
         tablet: {
-          breakpoint: { max: 1024, min: 464 },
-          items: 2
+            breakpoint: { max: 1024, min: 464 },
+            items: 2
         },
         mobile: {
-          breakpoint: { max: 464, min: 0 },
-          items: 1
+            breakpoint: { max: 464, min: 0 },
+            items: 1
         }
-      };
+    };
 
     return (
         <>
@@ -213,7 +241,7 @@ const App = () => {
             </div>
             <div id='bodyContainer'>
                 <div id="canvas-panel">
-                    <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURL={populationURL} sliderVal={sliderVal} viewingMode={viewingMode}/>
+                    <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURL={populationURL} sliderVal={sliderVal} viewingMode={viewingMode} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderMax={setSliderMax} setSliderStep={setSliderStep} />
                 </div>
                 <div id='info-panel'>
                     <div id="tooltips">
@@ -222,19 +250,19 @@ const App = () => {
                     </div>
                     <div id="viewChanger">
                         <button id="quartileButton" className={viewingMode === 'quartile' ? 'active-mode-btn' : ''} onClick={() => setViewingMode('quartile')}>Quartile View</button>
-                        <button id="sliderButton" className={viewingMode === 'slider' ? 'active-mode-btn' : ''}onClick={() => setViewingMode('slider')}>Slider View</button>
-                        <button id="comparisonButton" className={viewingMode === 'comparison' ? 'active-mode-btn' : ''}onClick={() => setViewingMode('comparison')}>Comparison View</button>
+                        <button id="sliderButton" className={viewingMode === 'slider' ? 'active-mode-btn' : ''} onClick={() => setViewingMode('slider')}>Slider View</button>
+                        <button id="comparisonButton" className={viewingMode === 'comparison' ? 'active-mode-btn' : ''} onClick={() => setViewingMode('comparison')}>Comparison View</button>
                     </div>
                     <div id="legend-scale">
                         <ul id='legend-labels'>
-                            {viewingMode === 'quartile' && <div className="content" style={{height: '100%'}}>{renderQuartileData()}</div>}
-                            {viewingMode === 'slider' && <div className="content" style={{height: '100%'}}>{renderSliderData()}</div>}
-                            {viewingMode === 'comparison' && <div className="content" style={{height: '100%'}}>TBD</div>}
+                            {viewingMode === 'quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
+                            {viewingMode === 'slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
+                            {viewingMode === 'comparison' && <div className="content" style={{ height: '100%' }}>TBD</div>}
 
                         </ul>
                     </div>
                     <div id='description'>{dataDescription}</div>
-                    <Carousel   
+                    <Carousel
                         centerMode={false}
                         customTransition="all 0.3s linear"
                         draggable={true}
@@ -244,12 +272,12 @@ const App = () => {
                         responsive={responsive}
                         slidesToSlide={2}
                         swipeable>
-                            <button className={activeDatasetClassButton === 'All' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="All" onClick={button => renderButtons(button.target.id)}>All Population</button>
-                            <button className={activeDatasetClassButton === 'Gender' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Gender" onClick={button => renderButtons(button.target.id)}>Population by Gender</button>
-                            <button className={activeDatasetClassButton === 'Race' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Race" onClick={button => renderButtons(button.target.id)}>Population by Race</button>
-                            <button className={activeDatasetClassButton === 'Sexuality' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Sexuality" onClick={button => renderButtons(button.target.id)}>Population by Sexuality</button>
-                            <button className={activeDatasetClassButton === 'Institutionalized' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Institutionalized" onClick={button => renderButtons(button.target.id)}>Institutionalized Population</button>
-                            <button className={activeDatasetClassButton === 'Median Age' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Median Age" onClick={button => renderButtons(button.target.id)}>Population by Median Age</button>
+                        <button className={activeDatasetClassButton === 'All' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="All" onClick={button => renderButtons(button.target.id)}>All Population</button>
+                        <button className={activeDatasetClassButton === 'Gender' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Gender" onClick={button => renderButtons(button.target.id)}>Population by Gender</button>
+                        <button className={activeDatasetClassButton === 'Race' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Race" onClick={button => renderButtons(button.target.id)}>Population by Race</button>
+                        <button className={activeDatasetClassButton === 'Sexuality' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Sexuality" onClick={button => renderButtons(button.target.id)}>Population by Sexuality</button>
+                        <button className={activeDatasetClassButton === 'Institutionalized' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Institutionalized" onClick={button => renderButtons(button.target.id)}>Institutionalized Population</button>
+                        <button className={activeDatasetClassButton === 'Median Age' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Median Age" onClick={button => renderButtons(button.target.id)}>Population by Median Age</button>
                     </Carousel>
                     <div id="boxContainer">
                         <div id="buttonBox" ref={buttonsRef}>
@@ -282,7 +310,7 @@ const App = () => {
 
                     </div>
                 </div>
-            </div>  
+            </div>
         </>
     );
 };
