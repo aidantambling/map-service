@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import './canvas.scss';
 
-const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL, sliderVal, viewingMode, countOrPercentage, setCountOrPercentage, setSliderMax, setSliderStep }) => {
+const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL, sliderVal, viewingMode, countOrPercentage, setCountOrPercentage, setSliderMax, setSliderStep, selectedCounty, setSelectedCounty }) => {
     const [countyData, setCountyData] = useState([]);
     const [populationData, setPopulationData] = useState([]);
     const [cutoffs, setCutoffs] = useState([]);
@@ -43,18 +43,16 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 if (countOrPercentage == 'Count') {
                     const maxVal = Math.max(...values);
                     highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95) / 20) * 20;
+                    console.log(getRoundedSliderSettings(highQuantile, 20, 250));
+                    setSliderMax(getRoundedSliderSettings(highQuantile, 20, 250).max);
+                    setSliderStep(getRoundedSliderSettings(highQuantile, 20, 250).step);
                 }
                 else {
                     highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95));
+                    console.log(getRoundedSliderSettings(highQuantile, 20, 0.5));
+                    setSliderMax(getRoundedSliderSettings(highQuantile, 20, 0.5).max);
+                    setSliderStep(getRoundedSliderSettings(highQuantile, 20, 0.5).step);
                 }
-                // highQuantile = Math.ceil(highQuantile / 20) * 20;
-                // console.log('MaxVal', maxVal);
-                // console.log('HighQuant', highQuantile);
-                console.log('Setting sliderMax: ', highQuantile);
-                console.log('Setting sliderStep: ', highQuantile / 20);
-                setSliderMax(highQuantile);
-                setSliderStep(highQuantile / 20);
-
 
                 let roundMatrix;
                 if (countOrPercentage == 'Count') {
@@ -68,9 +66,9 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 let optimalScore = -1;
                 roundMatrix.forEach(roundVal => {
                     const newCutoffs = getCutoffPoints(populationResponse.slice(1), roundVal);
-                    console.log('Rounding to ', roundVal, ': ', newCutoffs);
+                    // console.log('Rounding to ', roundVal, ': ', newCutoffs);
                     if (countOrPercentage == 'Percentage' && newCutoffs[1] == 100 && newCutoffs[1] == newCutoffs[2] && newCutoffs[2] == newCutoffs[3] && newCutoffs[3] == newCutoffs[4]) {
-                        console.log('Meaningless percentages');
+                        // console.log('Meaningless percentages');
                         //TODO: display popup saying that percentage not available for this
                         setCountOrPercentage('Count')
                     }
@@ -82,7 +80,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 })
                 const newCutoffs = getCutoffPoints(populationResponse.slice(1), optimalVal);
                 setCutoffs(newCutoffs);
-                console.log('Optimal score: ', optimalVal);
+                // console.log('Optimal score: ', optimalVal);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -90,10 +88,22 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         fetchData();
     }, [populationURL]);
 
+    function getRoundedSliderSettings(maxValue, numSteps, base) {
+        const roundedMax = Math.ceil(maxValue / base) * base;
+        let initialStep = roundedMax / numSteps;
+        const roundedStep = Math.ceil(initialStep / base) * base;
+        const adjustedMax = roundedStep * numSteps;
+
+        return {
+            max: adjustedMax,
+            step: roundedStep
+        };
+    }
+
     // update the legend whenever we adjust the slider, cutoff points, or viewing mode
     useEffect(() => {
         updateLegend(cutoffs, viewingMode);
-    }, [sliderVal, cutoffs, viewingMode])
+    }, [sliderVal, cutoffs, viewingMode, selectedCounty])
 
     // whenever we access a new data API, we need to re-compute the cutoff points for quartiles
     function getCutoffPoints(data, roundVal) {
@@ -119,6 +129,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
         // cutoffs unnecessary - split by slider value
         if (viewingMode === 'slider') {
+            console.log('slider')
             const colors = ['limegreen', 'tomato'];
             let aboveLabel = `Above ${sliderVal.toLocaleString()}`;
             let belowLabel = `Below ${sliderVal.toLocaleString()}`;
@@ -141,7 +152,45 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 }
             ];
         }
-        else {
+        else if (viewingMode === 'comparison') {
+            console.log('comp')
+            const colors = ['limegreen', 'tomato'];
+            if (!selectedCounty || selectedCounty.stat === undefined) {
+                console.log('couyrse 1')
+                newLegendData = [
+                    {
+                        color: colors[0],
+                        label: 'Select a county to color in the map!'
+                    }
+                ]
+            }
+
+            else {
+                let aboveLabel = `Above ${selectedCounty.stat.toLocaleString()}`;
+                let belowLabel = `Below ${selectedCounty.stat.toLocaleString()}`;
+                if (countOrPercentage === 'Percentage') {
+                    aboveLabel += '%';
+                    belowLabel += '%';
+                }
+                newLegendData = [
+                    {
+                        color: colors[0],
+                        label: aboveLabel
+                    },
+                    {
+                        color: colors[1],
+                        label: belowLabel
+                    },
+                    {
+                        color: 'black',
+                        label: 'No data'
+                    }
+                ];
+            }
+
+        }
+
+        else if (viewingMode === 'quartile') {
             console.log(cutoffs);
             const colors = ['tomato', 'orange', 'lightgreen', 'limegreen'];
             newLegendData = cutoffs
@@ -183,16 +232,20 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
             };
             newLegendData.push(blackElement);
         }
-        console.log(newLegendData);
+        // console.log(newLegendData);
         setLegendData(newLegendData); // whether the slider or quartile path was used, update the legend
     }
 
     // given a county, find its color based on the threshold and its value
-    const getColor = (countyVal, sliderVal, viewingMode) => {
+    const getColor = (countyVal, countyID, sliderVal, viewingMode) => {
+        if (countyVal === null) return 'black';
         if (viewingMode === "slider") {
             return countyVal >= sliderVal ? 'limegreen' : 'tomato';
         }
-        if (countyVal === null) return 'black';
+        if (viewingMode === 'comparison') {
+            if (countyID === selectedCounty.id) return 'purple';
+            return countyVal >= selectedCounty.stat ? 'limegreen' : 'tomato';
+        }
         for (let i = 0; i < cutoffs.length - 1; i++) {
             if (countyVal <= cutoffs[i + 1]) {
                 // const retVal = ['tomato', 'orange', 'lightgreen', 'limegreen'][i];
@@ -205,9 +258,30 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
     // display county data (name, value) on mouse-over
     const handleMouseOver = (countyName, stat) => {
+        if (viewingMode === 'Comparison') return; // compare mode - forget mouseover
         if (tooltipCountyRef.current && tooltipStatRef.current) {
             tooltipCountyRef.current.textContent = countyName;
             tooltipStatRef.current.textContent = stat;
+        }
+    };
+
+    const handleMouseOut = () => {
+        if (tooltipCountyRef.current && tooltipStatRef.current) {
+            tooltipCountyRef.current.textContent = '';
+            tooltipStatRef.current.textContent = '';
+        }
+    }
+
+    // if we're in compare mode, handle selection of county
+    const handleClick = (countyName, countyID, stat) => {
+        if (viewingMode === 'comparison') {
+            const obj = {
+                countyName: countyName,
+                id: countyID,
+                stat: stat
+            }
+            setSelectedCounty(obj)
+            console.log(obj);
         }
     };
 
@@ -239,9 +313,9 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         });
 
         // Log results to the console
-        console.log('County Distribution per Color:', colorCounts);
+        // console.log('County Distribution per Color:', colorCounts);
         const score = scoreDistribution(colorCounts);
-        console.log('Score: ', score);
+        // console.log('Score: ', score);
         return score;
     }
 
@@ -280,19 +354,22 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                     if (fipsCode.startsWith('0')) fipsCode = fipsCode.substring(1);
                     return fipsCode === id;
                 });
+                // console.log(countyItem);
                 let countyVal = countyItem ? parseFloat(countyItem[2]) : null;
+                let countyID = countyItem ? (countyItem[1]) : null;
 
                 return (
                     <path
                         key={index}
                         d={d3.geoPath()(county)}
                         className="county"
-                        fill={getColor(countyVal, sliderVal, viewingMode)}
+                        fill={getColor(countyVal, countyID, sliderVal, viewingMode)}
                         onMouseOver={(event) => {
                             handleMouseOver(countyItem[0], countyItem[2])
                         }
                         }
-                        onMouseOut={(event) => {/* Your mouseout logic here */ }}
+                        onMouseOut={(event) => { handleMouseOut() }}
+                        onClick={(event) => { handleClick(countyItem[0], countyItem[1], countyItem[2]) }}
                     />
                 );
             })}
