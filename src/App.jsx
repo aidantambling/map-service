@@ -12,27 +12,38 @@ const reducer = (state, action) => {
         case 'viewQuartile':
             return { viewingMode: 'quartile' };
         case 'viewSlider':
-            return { viewingMode: 'slider' };
+            return { viewingMode: 'slider', comparisonMode: 'overUnder' };
         case 'viewComparison':
-            return { viewingMode: 'comparison' };
-        case 'viewOverUnder':
             return { viewingMode: 'comparison', comparisonMode: 'overUnder' };
+        case 'viewOverUnder':
+            return { viewingMode: state.viewingMode, comparisonMode: 'overUnder' };
         case 'viewCompRange':
-            return { viewingMode: 'comparison', comparisonMode: 'viewCompRange' };
+            return { viewingMode: state.viewingMode, comparisonMode: 'viewCompRange' };
         default:
             throw new Error();
     }
 }
 
+// const datasetReducer = (state, action) => {
+//     switch (action.type) {
+//         case ''
+//     }
+// }
+
 
 const App = () => {
     const [state, dispatch] = useReducer(reducer, { viewingMode: 'quartile', comparisonMode: 'over/under' })
-    const [populationURL, setPopulationURL] = useState('https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0001C&for=county:*'); // API access URL - passed to Canvas.jsx
+
+    const [populationURLs, setPopulationURLs] = useState([
+        'https://api.census.gov/data/2020/dec/dp?get=NAME,GEO_ID,DP1_0001C&for=county:*'
+    ]);
     const [keywordToInfo, setKeywordToInfo] = useState(null); // stores .json data to interpret/access API URLs
 
     // tooltip refs - passed to Canvas.jsx for value assignment based on mouse-over
     const tooltipCountyRef = useRef(null);
     const tooltipStatRef = useRef(null);
+
+    const [jewish, setJewish] = useState([]);
 
     // slider state values
     const [sliderMax, setSliderMax] = useState(100000);
@@ -61,8 +72,14 @@ const App = () => {
 
     const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
 
+    // combine into reducer:
+    const [gender, setGender] = useState('');
+    const [race, setRace] = useState('All');
+    const [selectedAges, setSelectedAges] = useState([]);
+
     // initial fetch of API data
     useEffect(() => {
+        console.log(typeof (populationURLs))
         fetch('/apis.json') // Path relative to the public directory
             .then(response => response.json())
             .then(jsonData => setKeywordToInfo(jsonData.Buttons))
@@ -80,7 +97,7 @@ const App = () => {
 
     useEffect(() => {
         setSliderVal("0");
-    }, [populationURL])
+    }, [populationURLs])
 
     // load only the legend for quartile view
     function renderQuartileData() {
@@ -128,6 +145,8 @@ const App = () => {
                 {selectedCounty.countyName}
                 <br></br>
                 {selectedCounty.stat}
+                <br />
+                <a href={selectedCounty.wikiLink}>Wikipedia Link</a>
                 {renderQuartileData()}
             </>
         );
@@ -206,20 +225,22 @@ const App = () => {
     }
 
     // abstracting useState setPopulationURL to adjust the API access based on whether we are in count or percent mode
+    // TODO: HAS NOT BEEN ADAPTED FOR MULTI-URL APPROACH
     const configurePopulationURL = (url) => {
-        // console.log(countOrPercentage)
-        if (countOrPercentage === "Percentage") {
-            url = url.replace('C&for', 'P&for');
-        }
-        else if (countOrPercentage === "Count") {
-            url = url.replace('P&for', 'C&for');
-        }
-        setPopulationURL(url);
+        // url = url[0];
+        // // console.log(countOrPercentage)
+        // if (countOrPercentage === "Percentage") {
+        //     url = url.replace('C&for', 'P&for');
+        // }
+        // else if (countOrPercentage === "Count") {
+        //     url = url.replace('P&for', 'C&for');
+        // }
+        // setPopulationURLs(url);
     }
 
     // if count or percentage is changed, we should change the url without having to re-select the dataset button we have selected
     useEffect(() => {
-        configurePopulationURL(populationURL);
+        configurePopulationURL(populationURLs);
     }, [countOrPercentage])
 
     const responsive = {
@@ -250,6 +271,106 @@ const App = () => {
         setIsViewMenuOpen(!isViewMenuOpen);
     };
 
+    const ageRanges = [
+        "All", "Under 5 years", "5 to 9 years", "10 to 14 years", "15 to 17 years",
+        "18 and 19 years", "20 years", "21 years", "22 to 24 years",
+        "25 to 29 years", "30 to 34 years", "35 to 39 years", "40 to 44 years",
+        "45 to 49 years", "50 to 54 years", "55 to 59 years", "60 and 61 years",
+        "62 to 64 years", "65 and 66 years", "67 to 69 years", "70 to 74 years",
+        "75 to 79 years", "80 to 84 years", "85 years and over"
+    ];
+
+    const raceAgeRanges = [
+        "All", "Under 5 years", "5 to 9 years", "10 to 14 years", "15 to 17 years",
+        "18 and 19 years", "20 to 24 years",
+        "25 to 29 years", "30 to 34 years", "35 to 44 years",
+        "45 to 54 years", "55 to 64 years", "65 to 74 years",
+        "75 to 84 years", "85 years and over"
+    ];
+
+    const handleAgeRangeChange = (event) => {
+        const { value, checked } = event.target;
+        if (value === 'All') {
+            if (checked) {
+                setSelectedAges(['All']);
+            } else {
+                setSelectedAges([]);
+            }
+        } else {
+            setSelectedAges(prevSelectedAges => {
+                if (checked) {
+                    const newSelectedAges = prevSelectedAges.filter(age => age !== 'All').concat(value);
+                    return newSelectedAges;
+                } else {
+                    return prevSelectedAges.filter(age => age !== value);
+                }
+            });
+        }
+    };
+
+    const submitQuery = (event) => {
+        event.preventDefault();
+        console.log('Select values:', gender);
+        console.log('Select values:', race);
+        console.log('Checkbox values:', selectedAges);
+
+        // let currentAge = selectedAges[0];
+        // console.log(currentAge);
+
+        let generatedURLs = [];
+
+        selectedAges.forEach(currentAge => {
+            console.log(currentAge);
+            let param = 'B01001X_XXXE';
+
+            let val = 1;
+            if (gender === 'all') {
+                //TODO: the ACS gives queries in a binary where you can select either male or female. the exceptions are for 
+                // the total total, white total, black total, etc. in this case val must remain 1. you cannot specify the age (yet - this requires summation of queries)
+            }
+            else {
+                val++;
+            }
+            if (gender.toLowerCase() === 'female') {
+                val += 24;
+            }
+
+            switch (race.toLowerCase()) {
+                case 'all':
+                    param = param.replace('X', '');
+                    if (ageRanges.indexOf(currentAge) !== -1) {
+                        val += ageRanges.indexOf(currentAge);
+                    }
+                    break;
+                case 'white':
+                    param = param.replace('X', 'A');
+                    break;
+                case 'black':
+                    param = param.replace('X', 'B');
+                    break;
+                case 'native':
+                    param = param.replace('X', 'C');
+                    break;
+                case 'asian':
+                    param = param.replace('X', 'D');
+                    break;
+                default:
+                    console.log('Unknown race:', race);
+                    break;
+            }
+            if (race.toLowerCase() !== 'all') {
+                if (raceAgeRanges.indexOf(currentAge) !== -1) {
+                    val += raceAgeRanges.indexOf(currentAge);
+                }
+            }
+            param = param.replace('XXX', String(val).padStart(3, '0'));
+            param = 'https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,' + param + '&for=county:*'
+            console.log(param);
+            generatedURLs.push(param);
+        });
+        setPopulationURLs(generatedURLs);
+    }
+
     return (
         <>
             <div id="titleContainer">
@@ -260,7 +381,7 @@ const App = () => {
             </div>
             <div id='bodyContainer'>
                 <div id="canvas-panel">
-                    <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURL={populationURL} sliderVal={sliderVal} viewingMode={state.viewingMode} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderMax={setSliderMax} setSliderStep={setSliderStep} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />
+                    <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderVal={sliderVal} state={state} dispatch={dispatch} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderMax={setSliderMax} setSliderStep={setSliderStep} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} />
                 </div>
                 <div id='info-panel'>
                     <div id="tooltips">
@@ -284,7 +405,7 @@ const App = () => {
                         </ul>
                     </div>
                     <div id='description'>{dataDescription}</div>
-                    {state.viewingMode === 'comparison' && (
+                    {(state.viewingMode === 'comparison' || state.viewingMode === 'slider') && (
                         <>
                             <button onClick={() => dispatch({ type: 'viewOverUnder' })}>Over/Under</button>
                             <button onClick={() => dispatch({ type: 'viewCompRange' })}>Range</button>
@@ -292,56 +413,119 @@ const App = () => {
                         </>
                     )}
                     <button id="toggleSideMenuButton" onClick={toggleSideMenu}>Change Dataset</button>
-
                     {isSideMenuOpen && (
-                        <div className="sideMenu">
-                            <div className="sideMenuContent">
-                                <button id="closeSideMenuButton" onClick={toggleSideMenu}>Close</button>
-                                <Carousel
-                                    centerMode={false}
-                                    customTransition="all 0.3s linear"
-                                    draggable={true}
-                                    focusOnSelect={true}
-                                    keyBoardControl={true}
-                                    renderArrowsWhenDisabled={false}
-                                    responsive={responsive}
-                                    slidesToSlide={2}
-                                    swipeable>
-                                    <button className={activeDatasetClassButton === 'All' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="All" onClick={button => renderButtons(button.target.id)}>All Population</button>
-                                    <button className={activeDatasetClassButton === 'Gender' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Gender" onClick={button => renderButtons(button.target.id)}>Population by Gender</button>
-                                    <button className={activeDatasetClassButton === 'Race' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Race" onClick={button => renderButtons(button.target.id)}>Population by Race</button>
-                                    <button className={activeDatasetClassButton === 'Sexuality' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Sexuality" onClick={button => renderButtons(button.target.id)}>Population by Sexuality</button>
-                                    <button className={activeDatasetClassButton === 'Institutionalized' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Institutionalized" onClick={button => renderButtons(button.target.id)}>Institutionalized Population</button>
-                                    <button className={activeDatasetClassButton === 'Median Age' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Median Age" onClick={button => renderButtons(button.target.id)}>Population by Median Age</button>
-                                </Carousel>
-                                <div id="boxContainer">
-                                    <div id="buttonBox" ref={buttonsRef}>
-                                        {buttonData.map((item, index) => (
-                                            <React.Fragment key={index}>
-                                                <button className={activeDatasetButton === item.id ? 'selectedDatasetButton' : 'datasetButton'} id={item.id} onClick={() => renderSubButtons(item)}>
-                                                    {item.label}
-                                                </button>
-                                                {item.children.map((child, childIndex) => (
-                                                    <button key={childIndex} className={activeSubDatasetButton === child.id ? "selectedDatasetButton" : "datasetButton"} onClick={() => {
-                                                        configurePopulationURL(child.url);
-                                                        setActiveSubDatasetButton(child.id);
-                                                        setDataDescription(child.desc);
-                                                        setDataTitle(child.label);
-                                                    }}>
-                                                        {child.label}
-                                                    </button>
-                                                ))}
-                                            </React.Fragment>
-                                        ))}
+                        // <div className="sideMenu">
+                        //     <div className="sideMenuContent">
+                        //         <button id="closeSideMenuButton" onClick={toggleSideMenu}>Close</button>
+                        //         <Carousel
+                        //             centerMode={false}
+                        //             customTransition="all 0.3s linear"
+                        //             draggable={true}
+                        //             focusOnSelect={true}
+                        //             keyBoardControl={true}
+                        //             renderArrowsWhenDisabled={false}
+                        //             responsive={responsive}
+                        //             slidesToSlide={2}
+                        //             swipeable>
+                        //             <button className={activeDatasetClassButton === 'All' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="All" onClick={button => renderButtons(button.target.id)}>All Population</button>
+                        //             <button className={activeDatasetClassButton === 'Gender' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Gender" onClick={button => renderButtons(button.target.id)}>Population by Gender</button>
+                        //             <button className={activeDatasetClassButton === 'Race' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Race" onClick={button => renderButtons(button.target.id)}>Population by Race</button>
+                        //             <button className={activeDatasetClassButton === 'Sexuality' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Sexuality" onClick={button => renderButtons(button.target.id)}>Population by Sexuality</button>
+                        //             <button className={activeDatasetClassButton === 'Institutionalized' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Institutionalized" onClick={button => renderButtons(button.target.id)}>Institutionalized Population</button>
+                        //             <button className={activeDatasetClassButton === 'Median Age' ? 'selected-dataset-class-button' : 'dataset-class-button'} id="Median Age" onClick={button => renderButtons(button.target.id)}>Population by Median Age</button>
+                        //         </Carousel>
+                        //         <div id="boxContainer">
+                        //             <div id="buttonBox" ref={buttonsRef}>
+                        //                 {buttonData.map((item, index) => (
+                        //                     <React.Fragment key={index}>
+                        //                         <button className={activeDatasetButton === item.id ? 'selectedDatasetButton' : 'datasetButton'} id={item.id} onClick={() => renderSubButtons(item)}>
+                        //                             {item.label}
+                        //                         </button>
+                        //                         {item.children.map((child, childIndex) => (
+                        //                             <button key={childIndex} className={activeSubDatasetButton === child.id ? "selectedDatasetButton" : "datasetButton"} onClick={() => {
+                        //                                 configurePopulationURL(child.url);
+                        //                                 setActiveSubDatasetButton(child.id);
+                        //                                 setDataDescription(child.desc);
+                        //                                 setDataTitle(child.label);
+                        //                             }}>
+                        //                                 {child.label}
+                        //                             </button>
+                        //                         ))}
+                        //                     </React.Fragment>
+                        //                 ))}
+                        //             </div>
+                        //         </div>
+                        //         <div id="percent-count-selector">
+                        //             <button id="countButton" className={countOrPercentage === 'Count' ? 'count-percent-buttons-active' : 'count-percent-buttons'} onClick={() => setCountOrPercentage('Count')}>Count View</button>
+                        //             <button id="percentButton" className={countOrPercentage === 'Percentage' ? 'count-percent-buttons-active' : 'count-percent-buttons'} onClick={() => setCountOrPercentage('Percentage')}>Percentage View</button>
+                        //         </div>
+                        //     </div>
+                        // </div>
+                        <>
+                            <form className="form-container" onSubmit={submitQuery}>
+                                <div className="form-section">
+                                    <label className="label">Gender:</label>
+                                    <select className="select" value={gender} onChange={e => setGender(e.target.value)}>
+                                        <option value="">Select Gender</option>
+                                        <option value="all">All</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                </div>
+                                <div className="form-section">
+                                    <label className="label">Race:</label>
+                                    <select className="select" value={race} onChange={e => setRace(e.target.value)}>
+                                        <option value="">Select Race</option>
+                                        <option value="all">All</option>
+                                        <option value="white">White</option>
+                                        <option value="black">Black or African American</option>
+                                        <option value="native">American Indian and Alaska Native</option>
+                                        <option value="asian">Asian</option>
+                                        {/* Other races */}
+                                    </select>
+                                </div>
+                                <div className="form-section">
+                                    <label className="label">Age Ranges:</label>
+                                    <div className="checkbox-container">
+                                        {(race === 'All') &&
+                                            (
+                                                ageRanges.map((range, index) => (
+                                                    <label key={index} className="checkbox-label">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="checkbox"
+                                                            value={range}
+                                                            checked={selectedAges.includes(range)}
+                                                            onChange={handleAgeRangeChange}
+                                                        />
+                                                        {range}
+                                                    </label>
+                                                ))
+                                            )
+                                        }
+                                        {(race !== 'All') &&
+                                            (
+                                                raceAgeRanges.map((range, index) => (
+                                                    <label key={index} className="checkbox-label">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="checkbox"
+                                                            value={range}
+                                                            checked={selectedAges.includes(range)}
+                                                            onChange={handleAgeRangeChange}
+                                                        />
+                                                        {range}
+                                                    </label>
+                                                ))
+                                            )
+                                        }
                                     </div>
                                 </div>
-                                <div id="percent-count-selector">
-                                    <button id="countButton" className={countOrPercentage === 'Count' ? 'count-percent-buttons-active' : 'count-percent-buttons'} onClick={() => setCountOrPercentage('Count')}>Count View</button>
-                                    <button id="percentButton" className={countOrPercentage === 'Percentage' ? 'count-percent-buttons-active' : 'count-percent-buttons'} onClick={() => setCountOrPercentage('Percentage')}>Percentage View</button>
-                                </div>
-                            </div>
-                        </div>
+                                <button type="submit">Submit</button>
+                            </form>
+                            {/* <button id="toggleSideMenuButton" onClick={() => setPopulationURLs('https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,B05005_003E&for=county:*')}>Old Shi</button> */}
 
+                        </>
                     )}
                 </div>
             </div>

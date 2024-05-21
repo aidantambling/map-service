@@ -1,10 +1,69 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap');
 
-*{
+* {
     font-family: 'Source Sans Pro', sans-serif;
 }
 
-#titleContainer{
+/* Container for the form elements */
+.form-container {
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+/* Styles for each form section */
+.form-section {
+    margin-bottom: 20px;
+}
+
+/* Label styling for better readability */
+.label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Checkbox container to organize checkboxes neatly */
+.checkbox-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* Creates three columns */
+    grid-template-rows: repeat(8, 1fr);
+    /* Creates eight rows */
+    gap: 10px;
+    /* Spacing between grid items */
+    padding: 10px;
+}
+
+/* Styling for dropdown selects */
+.select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+/* Styling for checkboxes and their labels */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: black;
+}
+
+/* Style for the checkbox inputs */
+.checkbox {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: black;
+}
+
+
+#titleContainer {
     height: 10%;
     width: 100%;
     display: flex;
@@ -12,20 +71,20 @@
     justify-content: center;
     // background-color: green;
 
-    #title{
+    #title {
         font-size: 28px;
         color: #FDF1E7;
         text-transform: uppercase;
     }
 }
 
-#canvasTitleContainer{
+#canvasTitleContainer {
     height: 10%;
     width: 100%;
     display: grid;
     // background-color: blue;
-    
-    #canvasTitle{
+
+    #canvasTitle {
         font-size: 28px;
         color: #FDF1E7;
         text-transform: uppercase;
@@ -34,21 +93,21 @@
 }
 
 
-#bodyContainer{
+#bodyContainer {
     display: flex;
     justify-content: center;
     width: 100%;
     height: 80%;
     // background-color: red;
 
-    #canvas-panel{
+    #canvas-panel {
         width: 55%;
         height: 100%;
         min-height: 600px;
         min-width: 950px;
     }
 
-    #info-panel{
+    #info-panel {
         width: 21.25%;
         height: 85%;
         border: 1px solid white;
@@ -66,8 +125,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            
-            #tooltip-county{
+
+            #tooltip-county {
                 /* visibility: hidden; */
                 height: 50%;
                 width: 100%;
@@ -77,8 +136,8 @@
                 margin-bottom: 5px;
                 text-align: center;
             }
-            
-            #tooltip-stat{
+
+            #tooltip-stat {
                 /* visibility: hidden; */
                 height: 50%;
                 width: 100%;
@@ -90,13 +149,15 @@
             }
         }
 
-        #viewChanger{
+        #viewChanger {
             width: 100%;
             height: 5%;
             display: flex;
             flex-direction: row;
 
-            #quartileButton, #sliderButton, #comparisonButton {
+            #quartileButton,
+            #sliderButton,
+            #comparisonButton {
                 background-color: #305555;
                 color: #FDF1E7;
                 width: 50%;
@@ -106,44 +167,48 @@
                 border-radius: 5px;
             }
 
-            #quartileButton:hover, #sliderButton:hover, #comparisonButton:hover {
+            #quartileButton:hover,
+            #sliderButton:hover,
+            #comparisonButton:hover {
                 background-color: #213a3a;
                 cursor: pointer;
             }
 
             .active-mode-btn {
-                background-color: red !important ;
+                background-color: red !important;
             }
         }
 
-        #legend-scale{
+        #legend-scale {
             background-color: #305555;
             font-size: 18px;
             width: 100%;
             height: 35.5%;
-            
-            #legend-labels{
+
+            #legend-labels {
                 /* background-color: red; */
                 width: 90%;
                 max-height: 100%;
                 height: 100%;
                 margin-left: 5%;
-                padding: 0px; /*Has right padding of 40px for some reason. TODO: Find source and fix*/
-                
-                #legend-element{
+                padding: 0px;
+                /*Has right padding of 40px for some reason. TODO: Find source and fix*/
+
+                #legend-element {
                     display: flex;
                     align-items: center;
                     margin-top: 3.5%;
 
                     span {
-                        background-color: tomato; 
-                        display: flex; width: 2rem; 
-                        height: 2rem; 
+                        background-color: tomato;
+                        display: flex;
+                        width: 2rem;
+                        height: 2rem;
                         margin-right: 10%;
                     }
                 }
             }
-            
+
             #sliderBox {
                 margin-top: 10%;
                 height: 50%;
@@ -152,7 +217,7 @@
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                
+
                 #slider {
                     display: inline-block;
                 }
@@ -173,15 +238,15 @@
             height: 5%;
             text-align: center;
 
-            a{
+            a {
                 text-decoration: none;
                 color: #FDF1E7;
                 text-align: center;
             }
         }
 
-        .react-multi-carousel-track{
-            
+        .react-multi-carousel-track {
+
             button {
                 background-color: #305555;
                 color: #FDF1E7;
@@ -204,12 +269,12 @@
         }
 
 
-        #selectionContainer{
+        #selectionContainer {
             width: 100%;
             height: 8%;
             display: flex;
 
-            #buttonSelector{
+            #buttonSelector {
                 width: 80%;
                 height: 100%;
                 display: flex;
@@ -219,7 +284,7 @@
                 scroll-behavior: smooth;
                 scrollbar-width: none;
 
-                .dataset-class-button{
+                .dataset-class-button {
                     background-color: #305555;
                     color: #FDF1E7;
                     width: 50%;
@@ -248,14 +313,15 @@
             overflow-y: auto;
             overflow-x: hidden;
             width: 100%;
-        
+
             #buttonBox {
                 width: 100%;
                 display: flex;
                 flex-direction: column;
                 justify-content: space-around;
 
-                .datasetButton, .subdatasetButton {
+                .datasetButton,
+                .subdatasetButton {
                     background-color: #305555;
                     color: #FDF1E7;
                     width: 100%;
@@ -272,19 +338,20 @@
                 }
             }
         }
-        
-        #percent-count-selector{
+
+        #percent-count-selector {
             margin-top: 5%;
             width: 100%;
             height: 5%;
             display: flex;
             flex-direction: row;
 
-            #countButton:hover, #percentButton:hover {
+            #countButton:hover,
+            #percentButton:hover {
                 background-color: #213a3a;
                 cursor: pointer;
             }
-            
+
             .count-percent-buttons {
                 background-color: #305555;
                 color: #FDF1E7;
@@ -293,7 +360,7 @@
                 border: 1px solid #FDF1E7;
                 border-radius: 5px;
             }
-            
+
             .count-percent-buttons-active {
                 background-color: red;
                 color: #FDF1E7;
@@ -331,16 +398,16 @@
     //             justify-content: space-around;
     //         }
     //     }
-        
+
     // }
 
 }
 
 
-.county:hover{
+.county:hover {
     fill: black
 }
 
-g{
+g {
     color: #FDF1E7
 }
