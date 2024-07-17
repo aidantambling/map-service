@@ -10,10 +10,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@mui/lab": "^5.0.0-alpha.172",
+    "@mui/material": "^5.16.1",
+    "@mui/x-tree-view": "^7.10.0",
+    "@syncfusion/ej2-react-buttons": "^25.2.6",
+    "@syncfusion/ej2-react-lists": "^25.2.3",
     "d3": "^7.8.5",
+    "mui-tree-select": "^1.0.0-beta.11",
+    "mui-tree-select-v6": "^1.0.3-beta.11",
+    "rc-cascader": "^3.26.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-multi-carousel": "^2.8.4",
+    "react-multilevel-dropdown": "^4.0.0",
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {

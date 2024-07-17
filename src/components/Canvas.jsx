@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import * as topojson from 'topojson-client';
 import './canvas.scss';
 
-const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderVal, state, dispatch, countOrPercentage, setCountOrPercentage, setSliderMax, setSliderStep, selectedCounty, setSelectedCounty }) => {
+const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderVal, state, dispatch, countOrPercentage, setCountOrPercentage, setSliderMax, setSliderStep, selectedCounty, setSelectedCounty, setDataTitle }) => {
     const [countyData, setCountyData] = useState([]);
     const [populationData, setPopulationData] = useState([]);
     const [cutoffs, setCutoffs] = useState([]);
@@ -15,6 +15,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         const fetchData = async () => {
             try {
                 const countyResponse = await d3.json(countyURL);
+                // const countyResponse = await d3.json("CT_Councils_of_Governments.json");
                 const counties = topojson.feature(countyResponse, countyResponse.objects.counties).features;
                 setCountyData(counties);
 
@@ -22,6 +23,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 setPopulationData(populationResponse.slice(1));
                 const newCutoffs = getCutoffPoints(populationResponse.slice(1), 5000);
                 setCutoffs(newCutoffs);
+                setDataTitle("Sex by Age - Total Population");
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -33,40 +35,50 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     // re-render the map whenever the API url is changed
     useEffect(() => {
         console.log('Population Data have been changed to ', populationURLs)
+        console.log(typeof (populationURLs))
         const fetchData = async () => {
             try {
-                console.log(typeof (populationURLs))
-                if (!Array.isArray(populationURLs)) {
-                    console.error('populationURLs should be an array');
-                    return;
-                }
-                const fetchPromises = populationURLs.map(url => d3.json(url));
-                const responses = await Promise.all(fetchPromises);
-                let combinedData = {};
+                const fetchPromises = populationURLs.map(url => {
+                    console.log('Fetching URL:', url); // Log each URL being fetched
+                    return d3.json(url);
+                }); const responses = await Promise.all(fetchPromises);
+
+                responses.forEach((response, index) => {
+                    console.log(`Response from URL ${populationURLs[index]}:`, response);
+                    if (!response || !Array.isArray(response)) {
+                        throw new Error(`Invalid response structure from URL ${populationURLs[index]}`);
+                    }
+                });
+
+                // Combine and sum the data by county
+                const combinedDataMap = new Map();
 
                 responses.forEach(response => {
+                    console.log(response)
+                    if (!response || !Array.isArray(response)) {
+                        throw new Error('Invalid response structure');
+                    }
                     response.slice(1).forEach(row => {
-                        const countyId = row[1]; // Assuming the county ID is in the third column
-                        const value = +row[2];  // Assuming the value to sum is in the second column
-                        if (!combinedData[countyId]) {
-                            combinedData[countyId] = [...row];
+                        const countyId = row[1]; // Assuming the county ID is in the second column
+                        const value = +row[2];  // Assuming the value to sum is in the third column
+                        if (combinedDataMap.has(countyId)) {
+                            combinedDataMap.get(countyId)[2] = (parseFloat(combinedDataMap.get(countyId)[2]) + value).toString();
                         } else {
-                            combinedData[countyId][1] = (+combinedData[countyId][1] + value).toString();
+                            combinedDataMap.set(countyId, [...row]);
                         }
                     });
                 });
 
-                // Convert the combinedData object back to an array
-                const combinedDataArray = Object.values(combinedData);
+                // Convert the combinedDataMap back to an array
+                const combinedDataArray = Array.from(combinedDataMap.values());
 
                 setPopulationData(combinedDataArray);
 
-                const values = combinedData.map(d => +d[2]);
+                const values = combinedDataArray.map(d => +d[1]); // Assuming the value to analyze is in the second column
                 let highQuantile;
                 if (countOrPercentage == 'Count') {
                     const maxVal = Math.max(...values);
                     highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95) / 20) * 20;
-                    console.log(getRoundedSliderSettings(highQuantile, 20, 250));
                     setSliderMax(getRoundedSliderSettings(highQuantile, 20, 250).max);
                     setSliderStep(getRoundedSliderSettings(highQuantile, 20, 250).step);
                 }
@@ -88,20 +100,20 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 let optimalVal = -1;
                 let optimalScore = -1;
                 roundMatrix.forEach(roundVal => {
-                    const newCutoffs = getCutoffPoints(combinedData, roundVal);
+                    const newCutoffs = getCutoffPoints(combinedDataArray, roundVal);
                     // console.log('Rounding to ', roundVal, ': ', newCutoffs);
                     if (countOrPercentage == 'Percentage' && newCutoffs[1] == 100 && newCutoffs[1] == newCutoffs[2] && newCutoffs[2] == newCutoffs[3] && newCutoffs[3] == newCutoffs[4]) {
                         // console.log('Meaningless percentages');
                         //TODO: display popup saying that percentage not available for this
                         setCountOrPercentage('Count')
                     }
-                    const newScore = getCountyDistribution(combinedData, newCutoffs);
+                    const newScore = getCountyDistribution(combinedDataArray, newCutoffs);
                     if (optimalVal == -1 || newScore < 1000 || newScore < optimalScore) { // if score is uninit, take the score. or, take the highest roundval with reasonable score
                         optimalVal = roundVal;
                         optimalScore = newScore;
                     }
                 })
-                const newCutoffs = getCutoffPoints(combinedData, optimalVal);
+                const newCutoffs = getCutoffPoints(combinedDataArray, optimalVal);
                 setCutoffs(newCutoffs);
                 // console.log('Optimal score: ', optimalVal);
             } catch (error) {
@@ -274,7 +286,6 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         }
 
         else if (viewingMode === 'quartile') {
-            console.log(cutoffs);
             const colors = ['tomato', 'orange', 'lightgreen', 'limegreen'];
             newLegendData = cutoffs
                 .filter((cutoff, index) => {
@@ -282,7 +293,6 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                     // return index === cutoffs.length - 1 || cutoff !== cutoffs[index + 1];
                     return true;
                 }).map((cutoff, index) => {
-                    console.log(cutoff, index)
                     if (index < colors.length) {
                         let keyMessage;
                         if (index === 0) {
@@ -315,7 +325,6 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
             };
             newLegendData.push(blackElement);
         }
-        // console.log(newLegendData);
         setLegendData(newLegendData); // whether the slider or quartile path was used, update the legend
     }
 
@@ -332,16 +341,13 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         }
         if (viewingMode === 'comparison') {
             if (state.comparisonMode === 'overUnder') {
-                // console.log('overUnder protocol');
                 if (countyID === selectedCounty.id) return 'purple';
                 return countyVal >= selectedCounty.stat ? 'limegreen' : 'tomato';
             }
             if (state.comparisonMode === 'viewCompRange') {
-                // console.log('compRange protocol');
                 if (countyID === selectedCounty.id) return 'purple';
                 return (Math.abs(countyVal - selectedCounty.stat) <= 5000) ? 'limegreen' : 'tomato';
             }
-            console.log(state.comparisonMode)
         }
         for (let i = 0; i < cutoffs.length - 1; i++) {
             if (countyVal <= cutoffs[i + 1]) {
@@ -364,7 +370,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
     const handleMouseOut = () => {
         if (tooltipCountyRef.current && tooltipStatRef.current) {
-            tooltipCountyRef.current.textContent = '';
+            tooltipCountyRef.current.textContent = 'Hover over a county to see details!';
             tooltipStatRef.current.textContent = '';
         }
     }
@@ -380,7 +386,6 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 wikiLink: wikiLink
             }
             setSelectedCounty(obj)
-            console.log(obj);
         }
     };
 
@@ -412,9 +417,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         });
 
         // Log results to the console
-        // console.log('County Distribution per Color:', colorCounts);
         const score = scoreDistribution(colorCounts);
-        // console.log('Score: ', score);
         return score;
     }
 
@@ -444,34 +447,41 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         return totalScore;
     }
 
-    return (
-        <svg id='canvas'>
-            {countyData.map((county, index) => {
-                const id = county.id.toString();
-                const countyItem = populationData.find(item => {
-                    let fipsCode = item[1].slice(-5);
-                    if (fipsCode.startsWith('0')) fipsCode = fipsCode.substring(1);
-                    return fipsCode === id;
-                });
-                // console.log(countyItem);
-                let countyVal = countyItem ? parseFloat(countyItem[2]) : null;
-                let countyID = countyItem ? (countyItem[1]) : null;
+    const scale = 1;
+    const width = 960;
+    const height = 600;
 
-                return (
-                    <path
-                        key={index}
-                        d={d3.geoPath()(county)}
-                        className="county"
-                        fill={getColor(countyVal, countyID, sliderVal, state.viewingMode)}
-                        onMouseOver={(event) => {
-                            handleMouseOver(countyItem[0], countyItem[2])
-                        }
-                        }
-                        onMouseOut={(event) => { handleMouseOut() }}
-                        onClick={(event) => { handleClick(countyItem[0], countyItem[1], countyItem[2]) }}
-                    />
-                );
-            })}
+    // const translateX = (width / 2) - ((width * scale) / 2);
+    const translateX = 0;
+    const translateY = 0;
+
+    return (
+        <svg id="canvas" width="90%" height="90%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+            <g transform={`translate(${translateX}, ${translateY}) scale(${scale})`}>
+                {countyData.map((county, index) => {
+                    const id = county.id.toString();
+                    const countyItem = populationData.find(item => {
+                        let fipsCode = item[1].slice(-5);
+                        if (fipsCode.startsWith('0')) fipsCode = fipsCode.substring(1);
+                        return fipsCode === id;
+                    });
+
+                    let countyVal = countyItem ? parseFloat(countyItem[2]) : null;
+                    let countyID = countyItem ? countyItem[1] : null;
+
+                    return (
+                        <path
+                            key={index}
+                            d={d3.geoPath()(county)}
+                            className="county"
+                            fill={getColor(countyVal, countyID, sliderVal, state.viewingMode)}
+                            onMouseOver={() => handleMouseOver(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[2] : 'Unknown')}
+                            onMouseOut={handleMouseOut}
+                            onClick={() => handleClick(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[1] : 'Unknown', countyItem ? countyItem[2] : 'Unknown')}
+                        />
+                    );
+                })}
+            </g>
         </svg>
     );
 };

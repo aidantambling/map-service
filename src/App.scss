@@ -4,405 +4,194 @@
     font-family: 'Source Sans Pro', sans-serif;
 }
 
-/* Container for the form elements */
-.form-container {
-    margin: 20px;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
+/* Ensure the html and body take full height and have no margin */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
 }
 
-/* Styles for each form section */
-.form-section {
-    margin-bottom: 20px;
-}
-
-/* Label styling for better readability */
-.label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #333;
-}
-
-/* Checkbox container to organize checkboxes neatly */
-.checkbox-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    /* Creates three columns */
-    grid-template-rows: repeat(8, 1fr);
-    /* Creates eight rows */
-    gap: 10px;
-    /* Spacing between grid items */
-    padding: 10px;
-}
-
-/* Styling for dropdown selects */
-.select {
-    width: 100%;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-}
-
-/* Styling for checkboxes and their labels */
-.checkbox-label {
+#mainContainer {
     display: flex;
-    align-items: center;
-    cursor: pointer;
-    color: black;
+    flex-direction: column;
+    height: 100%;
 }
 
-/* Style for the checkbox inputs */
-.checkbox {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    color: black;
-}
+#titleContainer,
+#canvasTitleContainer {
+    background-color: #34495e;
+    color: white;
+    flex: 1; // each is 1/10 vertical screen space
 
-
-#titleContainer {
-    height: 10%;
-    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    // background-color: green;
 
     #title {
-        font-size: 28px;
-        color: #FDF1E7;
-        text-transform: uppercase;
+        margin: 0;
+        font-size: 24px;
     }
-}
-
-#canvasTitleContainer {
-    height: 10%;
-    width: 100%;
-    display: grid;
-    // background-color: blue;
 
     #canvasTitle {
-        font-size: 28px;
-        color: #FDF1E7;
-        text-transform: uppercase;
-        text-align: center;
+        margin: 0;
+        font-size: 20px;
     }
 }
-
 
 #bodyContainer {
     display: flex;
-    justify-content: center;
-    width: 100%;
-    height: 80%;
-    // background-color: red;
+    flex: 8; // remaining 8/10 vertical screen space
+    overflow: hidden;
 
     #canvas-panel {
-        width: 55%;
-        height: 100%;
-        min-height: 600px;
-        min-width: 950px;
+        flex: 7; // takes up left 7/8 of the body
+        position: relative;
+        background-color: #2c3e50;
+        color: white;
+        max-height: 100%;
+        overflow: hidden;
+
+        #legend-scale {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 50px;
+            border-radius: 5px;
+
+            ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+
+                li {
+                    margin: 5px 0;
+                }
+            }
+        }
     }
 
     #info-panel {
-        width: 21.25%;
-        height: 85%;
-        border: 1px solid white;
-        padding: 10px;
-        border-radius: 5px;
+        flex: 1; // takes up remaining 1/8 of the body
         display: flex;
         flex-direction: column;
-        background-color: #1b3030;
-        align-items: left;
+        background-color: #ecf0f1;
+        padding: 20px;
+        max-height: 100vh;
+        overflow-y: auto;
+        flex-shrink: 0;
 
         #tooltips {
-            height: 10%;
-            width: 100%;
-            margin-bottom: 7px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin-bottom: 20px;
 
-            #tooltip-county {
-                /* visibility: hidden; */
-                height: 50%;
-                width: 100%;
-                margin-top: 2px;
-                color: #FDF1E7;
-                font-size: 24px;
-                margin-bottom: 5px;
-                text-align: center;
-            }
-
-            #tooltip-stat {
-                /* visibility: hidden; */
-                height: 50%;
-                width: 100%;
-                margin-top: 2px;
-                color: #FDF1E7;
-                font-size: 24px;
-                margin-bottom: 5px;
-                text-align: center;
+            .tooltip {
+                background-color: #bdc3c7;
+                padding: 5px;
+                border-radius: 3px;
+                margin-bottom: 10px;
             }
         }
 
-        #viewChanger {
-            width: 100%;
-            height: 5%;
-            display: flex;
-            flex-direction: row;
-
-            #quartileButton,
-            #sliderButton,
-            #comparisonButton {
-                background-color: #305555;
-                color: #FDF1E7;
-                width: 50%;
-                min-width: 33%;
-                height: 100%;
-                border: 1px solid #FDF1E7;
-                border-radius: 5px;
-            }
-
-            #quartileButton:hover,
-            #sliderButton:hover,
-            #comparisonButton:hover {
-                background-color: #213a3a;
-                cursor: pointer;
-            }
-
-            .active-mode-btn {
-                background-color: red !important;
-            }
-        }
-
-        #legend-scale {
-            background-color: #305555;
-            font-size: 18px;
-            width: 100%;
-            height: 35.5%;
-
-            #legend-labels {
-                /* background-color: red; */
-                width: 90%;
-                max-height: 100%;
-                height: 100%;
-                margin-left: 5%;
-                padding: 0px;
-                /*Has right padding of 40px for some reason. TODO: Find source and fix*/
-
-                #legend-element {
-                    display: flex;
-                    align-items: center;
-                    margin-top: 3.5%;
-
-                    span {
-                        background-color: tomato;
-                        display: flex;
-                        width: 2rem;
-                        height: 2rem;
-                        margin-right: 10%;
-                    }
-                }
-            }
-
-            #sliderBox {
-                margin-top: 10%;
-                height: 50%;
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-
-                #slider {
-                    display: inline-block;
-                }
-
-                button {
-                    display: inline-block;
-                }
-
-
-                #sliderValue {
-                    text-align: center;
-                }
-            }
+        .active-mode-btn {
+            background-color: #27ae60;
         }
 
         #description {
-            margin-top: 5%;
-            height: 5%;
-            text-align: center;
-
-            a {
-                text-decoration: none;
-                color: #FDF1E7;
-                text-align: center;
-            }
+            margin-top: 20px;
         }
 
-        .react-multi-carousel-track {
-
-            button {
-                background-color: #305555;
-                color: #FDF1E7;
-                width: 100%;
-                height: 100%;
-                border: 1px solid #FDF1E7;
-                border-radius: 5px;
-                transition: all 1s ease;
-            }
-
-            .selected-dataset-class-button {
-                background-color: red !important;
-                color: #FDF1E7;
-                width: 100%;
-                height: 100%;
-                border: 1px solid #FDF1E7;
-                border-radius: 5px;
-                transition: all 1s ease;
-            }
-        }
-
-
-        #selectionContainer {
+        .toggleButton {
+            display: block;
             width: 100%;
-            height: 8%;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #2980b9;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .sideMenu {
+            margin-top: 20px;
+            flex-grow: 1;
             display: flex;
+            flex-direction: column;
+            overflow: hidden;
 
-            #buttonSelector {
-                width: 80%;
-                height: 100%;
-                display: flex;
-                flex-direction: row;
-                overflow-x: auto;
-                overflow-y: hidden;
-                scroll-behavior: smooth;
-                scrollbar-width: none;
-
-                .dataset-class-button {
-                    background-color: #305555;
-                    color: #FDF1E7;
-                    width: 50%;
-                    min-width: 33%;
-                    height: 100%;
-                    border: 1px solid #FDF1E7;
-                    border-radius: 5px;
-                    transition: all 1s ease;
-                }
-
-                .selected-dataset-class-button {
-                    background-color: red !important;
-                    color: #FDF1E7;
-                    width: 50%;
-                    min-width: 33%;
-                    height: 100%;
-                    border: 1px solid #FDF1E7;
-                    border-radius: 5px;
-                    transition: all 1s ease;
-                }
-            }
-        }
-
-        #boxContainer {
-            height: 150px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            width: 100%;
-
-            #buttonBox {
-                width: 100%;
+            .sideMenuContent {
                 display: flex;
                 flex-direction: column;
-                justify-content: space-around;
+                flex-grow: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
 
-                .datasetButton,
-                .subdatasetButton {
-                    background-color: #305555;
-                    color: #FDF1E7;
-                    width: 100%;
-                    height: 35px;
-                    border: 1px solid white;
+                // .react-multi-carousel-list {
+                //     overflow: visible !important;
+                // }
+
+                // .react-multi-carousel-track {
+                //     button {
+                //         background-color: #305555;
+                //         color: #FDF1E7;
+                //         width: 100%;
+                //         display: -webkit-box;
+                //         -webkit-box-orient: vertical;
+                //         overflow: hidden;
+                //         text-overflow: ellipsis;
+                //         height: 200px;
+                //         border: 1px solid #FDF1E7;
+                //         border-radius: 5px;
+                //         transition: all 1s ease;
+                //     }
+
+                //     .selected-dataset-class-button {
+                //         background-color: #8e44ad !important;
+                //     }
+
+                //     .dataset-class-button {
+                //         background-color: #89acc3 !important;
+                //     }
+                // }
+
+
+                button {
+                    margin-bottom: 5px;
                 }
 
-                .selectedDatasetButton {
-                    background-color: red;
-                    color: #FDF1E7;
+                button:hover {
+                    background-color: #3498db;
+                }
+            }
+
+            .dynamic-form {
+                margin-top: 20px;
+
+                .e-listview,
+                // not working
+                .e-list-text {
+                    display: block;
                     width: 100%;
-                    height: 35px;
-                    border: 1px solid white;
+                    margin-bottom: 10px;
+                    padding: 10px;
+                    background-color: #e74c3c !important;
+                    color: white;
+                    border: none;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    transition: background-color 0.3s;
                 }
             }
         }
 
-        #percent-count-selector {
-            margin-top: 5%;
-            width: 100%;
-            height: 5%;
-            display: flex;
-            flex-direction: row;
-
-            #countButton:hover,
-            #percentButton:hover {
-                background-color: #213a3a;
-                cursor: pointer;
-            }
-
-            .count-percent-buttons {
-                background-color: #305555;
-                color: #FDF1E7;
-                width: 50%;
-                height: 100%;
-                border: 1px solid #FDF1E7;
-                border-radius: 5px;
-            }
-
-            .count-percent-buttons-active {
-                background-color: red;
-                color: #FDF1E7;
-                width: 50%;
-                height: 100%;
-                border: 1px solid #FDF1E7;
-                border-radius: 5px;
-            }
-        }
 
     }
-
-    // #second-panel{
-    //     width: 15%;
-    //     height: 85%;
-    //     padding: 10px;
-    //     border-radius: 5px;
-    //     display: flex;
-    //     flex-direction: column;
-    //     align-items: left;
-
-    //     #ageGroupContainer {
-    //         top: 63.5%;
-    //         height: 150px;
-    //         overflow-y: auto;
-    //         overflow-x: hidden;
-    //         width: 100%;
-    //         /* margin-top: 50.5%; */
-    //         position: relative;
-
-    //         #ageGroupButtons{
-    //             width: 100%;
-    //             display: flex;
-    //             flex-direction: column;
-    //             justify-content: space-around;
-    //         }
-    //     }
-
-    // }
-
 }
-
 
 .county:hover {
     fill: black
