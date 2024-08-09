@@ -87,6 +87,48 @@ export const findConcepts = async (keyVal) => {
 }
 
 
+const reduceConcepts = (concepts) => {
+    if (concepts.length === 0) return [];
+
+    const baseConceptObj = concepts[0];
+    const baseConcept = baseConceptObj.concept;
+    const baseConceptPattern = new RegExp(`^${baseConcept}\\s*\\((.*?)\\)$`);
+
+    return concepts.map(conceptObj => {
+        if (typeof conceptObj.concept !== 'string') {
+            console.error('Invalid concept type:', conceptObj);
+            return {
+                concept: conceptObj.concept,
+                group: conceptObj.group
+            };
+        }
+
+        if (conceptObj.concept === baseConcept) {
+            return {
+                concept: 'Total',
+                group: conceptObj.group
+            };
+        }
+
+        const match = conceptObj.concept.match(baseConceptPattern);
+        if (match) {
+            console.log(match[1]);
+            return {
+                concept: match[1],
+                group: conceptObj.group
+            };
+        }
+
+        // Add any specific rules that should not apply the base concept reduction
+        // if (conceptObj.concept.includes('Place of Birth by Age')) {
+        //     return conceptObj.concept; // Do not alter these specific cases
+        // }
+
+        return conceptObj.concept;
+    });
+};
+
+
 export const findConceptsFromBase = async (keyVal) => {
     try {
         const response = await fetch('/variables.json');
@@ -103,10 +145,13 @@ export const findConceptsFromBase = async (keyVal) => {
             return 0;
         });
 
+        const refinedConcepts = reduceConcepts(conceptsWithGroup)
+
         const uniqueConceptsMap = new Map();
 
-        conceptsWithGroup.forEach(({ concept, group }) => {
+        refinedConcepts.forEach(({ concept, group }) => {
             if (!uniqueConceptsMap.has(concept)) {
+                console.log('CONCEPT: ', concept)
                 uniqueConceptsMap.set(concept, group);
             }
         });

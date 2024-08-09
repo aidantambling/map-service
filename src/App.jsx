@@ -9,6 +9,10 @@ import './App.scss';
 import { active } from 'd3';
 import ModalDisplay from './components/Modal/Modal';
 import TreeView from './components/TreeView/TreeView';
+import { Tooltip } from '@mui/material';
+import SettingsModal from './components/SettingsModal/SettingsModal';
+import RangeSlider from './components/RangeSlider/RangeSlider';
+import ViewModal from './components/ViewModal/ViewModal';
 
 const reducer = (state, action) => {
     switch (action.type) {
@@ -32,7 +36,6 @@ const App = () => {
     const [populationURLs, setPopulationURLs] = useState([
         'https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,B01003_001E&for=county:*'
     ]);
-    // const [keywordToInfo, setKeywordToInfo] = useState(null); // stores .json data to interpret/access API URLs
 
     // tooltip refs - passed to Canvas.jsx for value assignment based on mouse-over
     const tooltipCountyRef = useRef(null);
@@ -43,12 +46,6 @@ const App = () => {
     const [sliderStep, setSliderStep] = useState(5000);
     const [sliderVal, setSliderVal] = useState(0);
 
-    // dataset buttons-related
-    // const [buttonData, setButtonData] = useState([]); // track the dataset buttons that should be rendered
-    const [activeDatasetClassButton, setActiveDatasetClassButton] = useState("All");
-
-    // dataset context elements
-    const [dataDescription, setDataDescription] = useState("Loading...");
     const [dataTitle, setDataTitle] = useState("Loading...");
     const [legendData, setLegendData] = useState([]);
 
@@ -57,27 +54,16 @@ const App = () => {
 
     // changing the view mode
     const [selectedCounty, setSelectedCounty] = useState([]);
-    const [isSideMenuOpen, setIsSideMenuOpen] = useState(true);
     const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
 
-    // // initial fetch of API data
-    // useEffect(() => {
-    //     console.log(typeof (populationURLs))
-    //     fetch('/apis.json') // Path relative to the public directory
-    //         .then(response => response.json())
-    //         .then(jsonData => setKeywordToInfo(jsonData.Buttons))
-    //         .catch(error => console.error('Error fetching data:', error));
-    // }, []);
+    const [palettes, setPalettes] = useState(null);
+    const [selectedPalette, setSelectedPalette] = useState('');
+    const [conceptGroups, setConceptGroups] = useState([]);
+    const [concepts, setConcepts] = useState();
+    const [queryVars, setQueryVars] = useState([])
 
-    // // when API is confirmed as fetched, or is changed (?), render the 'All" dataset buttons
-    // useEffect(() => {
-    //     if (keywordToInfo) {
-    //         console.log('keywordTOINFOOOOOOO')
-    //         renderButtons("All");
-    //         setDataDescription(keywordToInfo["All"]["populationDataBtn"].description);
-    //         setDataTitle(keywordToInfo["All"]["populationDataBtn"].title);
-    //     }
-    // }, [keywordToInfo]);
+    const [currentlyViewing, setCurrentlyViewing] = useState(true)
+    const [title, setTitle] = useState('Sex by Age => Sex by Age')
 
     useEffect(() => {
         setSliderVal("0");
@@ -99,25 +85,14 @@ const App = () => {
 
     // load the legend (same as quartile view - the legend has alr been updated via useEffect in Canvas.jsx), and load the slider itself as well
     function renderSliderData() {
-        let renderSliderVal = sliderVal;
-        if (countOrPercentage === 'Percentage') {
-            renderSliderVal += "%";
-        }
 
         return (
             <>
                 {renderQuartileData()}
-                <div id='sliderBox'>
-                    <input className="slider"
-                        type="range"
-                        id="slider"
-                        name="slider"
-                        min="0"
-                        max={sliderMax.toString()}
-                        step={sliderStep.toString()}
-                        value={sliderVal}
-                        onChange={(v) => setSliderVal(v.target.value)} />
-                    <div id="sliderValue">{renderSliderVal}</div>
+                <RangeSlider max={sliderMax} step={sliderStep} sliderVal={sliderVal} setSliderVal={setSliderVal} />
+                <div className='type-selector'>
+                    <button onClick={() => dispatch({ type: 'viewOverUnder' })}>Over/Under</button>
+                    <button onClick={() => dispatch({ type: 'viewCompRange' })}>Range</button>
                 </div>
             </>
         );
@@ -126,38 +101,26 @@ const App = () => {
     function renderComparisonData() {
         return (
             <>
-                {selectedCounty.countyName}
-                <br></br>
-                {selectedCounty.stat}
-                <br />
-                <a href={selectedCounty.wikiLink}>Wikipedia Link</a>
+                <h5>
+                    {selectedCounty.countyName}
+                </h5>
+                <h5>
+                    {selectedCounty.stat}
+                </h5>
+                <h5>
+                    <a href={selectedCounty.wikiLink}>Wikipedia Link</a>
+                </h5>
+                <div className='type-selector'>
+                    <button onClick={() => dispatch({ type: 'viewOverUnder' })}>Over/Under</button>
+                    <button onClick={() => dispatch({ type: 'viewCompRange' })}>Range</button>
+                </div>
                 {renderQuartileData()}
             </>
         );
     }
 
-    // abstracting useState setPopulationURL to adjust the API access based on whether we are in count or percent mode
-    // TODO: HAS NOT BEEN ADAPTED FOR MULTI-URL APPROACH
-    // const configurePopulationURL = (url) => {
-    //     // url = url[0];
-    //     // // console.log(countOrPercentage)
-    //     // if (countOrPercentage === "Percentage") {
-    //     //     url = url.replace('C&for', 'P&for');
-    //     // }
-    //     // else if (countOrPercentage === "Count") {
-    //     //     url = url.replace('P&for', 'C&for');
-    //     // }
-    //     // setPopulationURLs(url);
-    // }
-
-    // if count or percentage is changed, we should change the url without having to re-select the dataset button we have selected
-    // useEffect(() => {
-    //     configurePopulationURL(populationURLs);
-    // }, [countOrPercentage])
-
     const responsive = {
         superLargeDesktop: {
-            // the naming can be any, depends on you.
             breakpoint: { max: 4000, min: 3000 },
             items: 5
         },
@@ -175,22 +138,22 @@ const App = () => {
         }
     };
 
-    // const toggleSideMenu = () => {
-    //     setIsSideMenuOpen(!isSideMenuOpen);
-    // };
-
     const toggleViewMenu = () => {
         setIsViewMenuOpen(!isViewMenuOpen);
     };
 
-    const [conceptGroups, setConceptGroups] = useState([]);
-    const [baseConcepts, setBaseConcepts] = useState([]);
-    const [concepts, setConcepts] = useState();
-    const [labels, setLabels] = useState({});
+    const fetchColorPalettes = async () => {
+        const response = await fetch('/palettes.json');
+        const data = await response.json();
+        setPalettes(data)
+        setSelectedPalette(data[0].colors)
+        console.log(data)
+    }
 
-    const [selectedConcept, setSelectedConcept] = useState();
+    useEffect(() => {
+        fetchColorPalettes();
+    }, [])
 
-    const [queryVars, setQueryVars] = useState([])
 
     // 1. upon loading the dataset, fetch the top-level concept groups to display
     useEffect(() => {
@@ -199,16 +162,6 @@ const App = () => {
 
     // 2. when a user selects a concept group, display the concepts it refers to
     // migrated to Modal.jsx
-    // const renderConcepts = (form, index) => {
-    //     console.log(form.conceptGroup)
-    //     setActiveDatasetClassButton(form.conceptGroup)
-    //     const pullData = async () => {
-    //         const c = await findConcepts(form.groupPrefix);
-    //         setBaseConcepts(c);
-    //     }
-    //     pullData();
-    //     // activateForm(form)
-    // }
 
     // 3. when a user selects a concept, display its subconcepts.
     const renderSubconcepts = async (form) => {
@@ -216,11 +169,8 @@ const App = () => {
         const pullData = async () => {
             let c = await findConceptsFromBase(form.slice(0, 6));
 
-            // Create an array of promises
             const promises = c.map(async (entry) => {
-                console.log(entry)
                 const children = await renderLabels(entry.group, entry.concept);
-                console.log(children)
                 return {
                     id: entry.group,
                     group: entry.group,
@@ -229,25 +179,11 @@ const App = () => {
                 };
             });
 
-            // Wait for all promises to resolve
             const result = await Promise.all(promises);
-
-            // Update state with the resolved data
             setConcepts(result);
         }
         await pullData();
-        // await renderLabels(form) // we necessarily must render the labels, too
     }
-
-    // useEffect(() => {
-    //     if (concepts) {
-    //         renderLabels(selectedConcept.group)
-    //     }
-    // }, [selectedConcept])
-
-    // useEffect(() => {
-    //     console.log(concepts)
-    // }, [concepts])
 
     // 4. labels are tied to a subconcept. so when the user selects a concept (implicitly selecting subconcept) or explicitly selects subconcept, display the labels
     const renderLabels = async (formVal, category) => {
@@ -269,26 +205,24 @@ const App = () => {
     }
 
     const queryAPI = () => {
-        const popURLs = queryVars.map(queryVar => paramToURL(queryVar.access));
+        const popURLs = queryVars.map(queryVar => paramToURL(queryVar.group));
         console.log(popURLs);
         setPopulationURLs(popURLs);
+        setCurrentlyViewing(false)
     }
 
     const addVarToQuery = (obj) => {
         // add some logic here - if male total, female total selected, maybe just query total? or if total selected, and male total selected, rm total?
-        console.log(obj)
         const variable = {
             fullpath: obj.fullpath,
             access: obj.group,
         }
-        console.log(variable)
         setQueryVars([...queryVars, variable])
     }
 
-    const handleRemove = (indexToRemove) => {
-        const newQueryVars = queryVars.filter((_, index) => index !== indexToRemove);
-        setQueryVars(newQueryVars);
-    };
+    useEffect(() => {
+        console.log(selectedPalette)
+    }, [selectedPalette])
 
     return (
         <div id="mainContainer">
@@ -296,12 +230,14 @@ const App = () => {
                 <h2 id='title'>Census API Visualization Tool</h2>
             </div>
             <div id="canvasTitleContainer">
-                {/* <h2 id='canvasTitle'>{dataTitle}</h2> */}
-                <ModalDisplay conceptGroups={conceptGroups} renderSubconcepts={renderSubconcepts} dataTitle={dataTitle} setDataTitle={setDataTitle} />
+                <Tooltip title={title}>
+                    <ModalDisplay conceptGroups={conceptGroups} renderSubconcepts={renderSubconcepts} dataTitle={dataTitle} setDataTitle={setDataTitle} setTitle={setTitle} />
+                </Tooltip>
+                <SettingsModal palettes={palettes} setSelectedPalette={setSelectedPalette}></SettingsModal>
             </div>
             <div id='bodyContainer'>
                 <div id="canvas-panel">
-                    <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderVal={sliderVal} state={state} dispatch={dispatch} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderMax={setSliderMax} setSliderStep={setSliderStep} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} setDataTitle={setDataTitle} />
+                    <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderVal={sliderVal} state={state} dispatch={dispatch} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderMax={setSliderMax} setSliderStep={setSliderStep} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} setDataTitle={setDataTitle} selectedPalette={selectedPalette} />
                     <div id="legend-scale">
                         <ul id='legend-labels'>
                             {state.viewingMode === 'quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
@@ -312,45 +248,60 @@ const App = () => {
                 </div>
                 <div id='info-panel'>
                     <div id="tooltips">
-                        <div class='tooltip' id='tooltip-county' ref={tooltipCountyRef}>Hover over a county to see details!</div>
-                        <div class='tooltip' id='tooltip-stat' ref={tooltipStatRef}></div>
+                        <div class='tooltip' id='tooltip-county' ref={tooltipCountyRef}>Hover over a county</div>
+                        <div class='tooltip' id='tooltip-stat' ref={tooltipStatRef}>to see details!</div>
                     </div>
-                    <button id="toggleSideMenuButton" class='toggleButton' onClick={toggleViewMenu}>Change View</button>
-                    {isViewMenuOpen && (
-                        <div id="viewChanger">
-                            <button id="quartileButton" className={state.viewingMode === 'quartile' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewQuartile' })}>Quartile View</button>
-                            <button id="sliderButton" className={state.viewingMode === 'slider' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewSlider' })}>Slider View</button>
-                            <button id="comparisonButton" className={state.viewingMode === 'comparison' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewComparison' })}>Comparison View</button>
+                    {/* <button id="toggleSideMenuButton" class='toggleButton' onClick={toggleViewMenu}>Change View</button> */}
+                    <ViewModal state={state} dispatch={dispatch} />
+                    {/* {isViewMenuOpen && (
+                        // <div id="viewChanger">
+                        //     <button id="quartileButton" className={state.viewingMode === 'quartile' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewQuartile' })}>Quartile View</button>
+                        //     <button id="sliderButton" className={state.viewingMode === 'slider' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewSlider' })}>Slider View</button>
+                        //     <button id="comparisonButton" className={state.viewingMode === 'comparison' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewComparison' })}>Comparison View</button>
+                        // </div>
+                    )} */}
+                    {/* We need to implement the description... */}
+                    {/* <div id='description'>{dataDescription}</div> */}
+                    <div className="sideMenu">
+                        <div className="sideMenuContent">
+                            {
+                                currentlyViewing ?
+                                    (
+                                        <>
+                                            <TreeView items={concepts} addVarToQuery={addVarToQuery} setQueryVars={setQueryVars} queryVars={queryVars} />
+                                            {
+                                                concepts ?
+                                                    <button onClick={() => queryAPI()}>Submit</button>
+                                                    :
+                                                    <></>
+                                            }
+                                        </>
+                                    ) :
+                                    (
+                                        <>
+                                            <div className='currently-viewing-box'>
+                                                <h2>Currently selected:</h2>
+                                                <div className='query-vars-box'>
+                                                    {queryVars
+                                                        .sort((a, b) => {
+                                                            if (a.group < b.group) return -1;
+                                                            if (a.group > b.group) return 1;
+                                                            return 0;
+                                                        })
+                                                        .map((variable, index) => (
+                                                            <div key={index} style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
+                                                                <p>{variable.fullpath}</p>
+                                                            </div>
+                                                        ))}
+
+                                                </div>
+                                                <button onClick={() => setCurrentlyViewing(true)}>Change Selection</button>
+                                            </div>
+                                        </>
+                                    )
+                            }
                         </div>
-                    )}
-                    <div id='description'>{dataDescription}</div>
-                    {(state.viewingMode === 'comparison' || state.viewingMode === 'slider') && (
-                        <>
-                            <button onClick={() => dispatch({ type: 'viewOverUnder' })}>Over/Under</button>
-                            <button onClick={() => dispatch({ type: 'viewCompRange' })}>Range</button>
-                            {state.comparisonMode}
-                        </>
-                    )}
-                    {/* <button id="toggleSideMenuButton" class='toggleButton' onClick={toggleSideMenu}>Change Dataset</button> */}
-                    {isSideMenuOpen && (
-                        <div className="sideMenu">
-                            <div className="sideMenuContent">
-                                {/* <DynamicForm onSubmit={addVarToQuery} labels={labels} concepts={concepts} selectedConcept={selectedConcept} setSelectedConcept={setSelectedConcept} /> */}
-                                <TreeView items={concepts} addVarToQuery={addVarToQuery} />
-                                <div>
-                                    {queryVars.map((variable, index) => (
-                                        <div key={index} style={{ color: 'red', display: 'flex', alignItems: 'center' }}>
-                                            <p>{variable.fullpath} {variable.label} {variable.access}</p>
-                                            <button onClick={() => handleRemove(index)} style={{ marginLeft: '10px', color: 'white', backgroundColor: 'red' }}>
-                                                x
-                                            </button>
-                                        </div>
-                                    ))}
-                                    <button onClick={() => queryAPI()}>Submit</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    </div>
                 </div>
             </div>
         </div>

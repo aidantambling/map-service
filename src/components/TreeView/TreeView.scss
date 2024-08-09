@@ -1,3 +1,32 @@
 .tree-container {
-    color: black !important;
+    color: #333333 !important;
+    min-height: 70%;
+    overflow-y: auto;
+}
+
+.err-msg {
+    text-align: center;
+    margin-bottom: 10%;
+}
+
+// .MuiTreeItem-content {
+//     background-color: white;
+// }
+
+// .MuiTreeItem-content:hover {
+//     background-color: green;
+// }
+
+.MuiTreeItem-root {
+    // background-color: red;
+    // border: 1px solid black;
+}
+
+.MuiTreeItem-root:hover {
+    background-color: #ecf0f1;
+    // border: 1px solid black;
+}
+
+.Mui-selected {
+    background-color: #A9D6DC !important;
 }
