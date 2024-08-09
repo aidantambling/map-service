@@ -1,35 +1,65 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
-
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
-import "./TreeView.scss"
+import { useTreeViewApiRef } from '@mui/x-tree-view/hooks';
+import './TreeView.scss';
 
+const TreeView = ({ items, addVarToQuery, setQueryVars, queryVars }) => {
+    // const [selectedItems, setSelectedItems] = useState([]);
+    const apiRef = useTreeViewApiRef();
 
-const TreeView = ({ items, addVarToQuery, selectedConcept, setSelectedConcept }) => {
+    // useEffect(() => {
+    //     // if (selectedItems) {
+    //     //     selectedItems.forEach((itemId) => {
+    //     //         setGreen(itemId, '#A9D6DC');
+    //     //     });
+    //     // }
+    // }, [selectedItems]);
 
-    useEffect(() => {
-        console.log(items)
-    }, [items])
+    // const setGreen = (itemID, colorCode) => {
+    //     const itemElement = apiRef.current.getItemDOMElement(itemID);
+    //     if (itemElement) {
+    //         console.log('element ', itemID, ' found - changing color')
+    //         itemElement.style.backgroundColor = colorCode;
+    //     }
+    // };
 
-    const toggleProcess = (event, selectedItem, isSelected, isLeaf) => {
-        if (isSelected) {
-            console.log(selectedItem)
-            if (isLeaf) {
-                addVarToQuery(selectedItem)
-            }
-            // restruct si tgat we onyl are adding leaf nodes to the query....
+    const toggleProcess = (event, ids) => {
+        const variable = {
+            fullpath: selectedItem.fullpath,
+            access: selectedItem.group,
+            id: selectedItem.id,
         }
-        // add the variable to query...
-
+        console.log(selectedItem.id);
+        console.log(variable)
+        // setQueryVars([...queryVars, variable])
+        // if (selectedItems.includes(selectedItem.id)) { // if its included, we should remove it
+        //     console.log('Removing selection of ', selectedItem.id)
+        //     // const newSelectedItems = selectedItems.filter((id) => id !== selectedItem.id);
+        //     // setGreen(selectedItem.id, '#ecf0f1');
+        //     // setSelectedItems(newSelectedItems);
+        // } else {
+        //     console.log('Adding selection of ', selectedItem.id)
+        //     // const newSelectedItems = [...selectedItems, selectedItem.id];
+        //     // setSelectedItems(newSelectedItems);
+        // }
     }
 
-    const handleItemSelectionToggle = (event, itemId, isSelected) => {
-        const selectedItem = findItemById(items, itemId);
-        if (selectedItem) {
-            const isLeaf = !selectedItem?.children || selectedItem?.children?.length === 0;
-            toggleProcess(event, selectedItem, isSelected, isLeaf);
+    useEffect(() => {
+        console.log(queryVars)
+    }, [queryVars])
+
+    const handleItemSelectionToggle = (event, ids) => {
+        let selectedItems = [];
+        for (const id of ids) {
+            const selectedItem = findItemById(items, id);
+            if (selectedItem && !selectedItems.includes(selectedItem)) {
+                selectedItems = [...selectedItems, selectedItem]
+            }
         }
+        // console.log(selectedItems)
+        setQueryVars(selectedItems)
     };
 
     const findItemById = (items, itemId) => {
@@ -47,19 +77,34 @@ const TreeView = ({ items, addVarToQuery, selectedConcept, setSelectedConcept })
         return null;
     };
 
-
     return (
-        <div class='tree-container'>
+        <div className='tree-container'>
             {items?.length > 0 ? (
                 <Box sx={{ minHeight: 352, minWidth: 250 }}>
-                    <RichTreeView items={items} onItemSelectionToggle={handleItemSelectionToggle} />
-
+                    <RichTreeView
+                        items={items}
+                        apiRef={apiRef}
+                        // onItemSelectionToggle={handleItemSelectionToggle}
+                        onSelectedItemsChange={handleItemSelectionToggle}
+                        checkboxSelection={true}
+                        multiSelect={true}
+                    // selectedItems={queryVars}
+                    />
                 </Box>
             ) : (
-                <div>NOthinski</div>
+                <div className='err-msg'>Select a dataset to open the query constructor!</div>
             )}
+            {/* {selectedItems?.length ? 0 > (
+                <ul>
+                    {selectedItems.map((item) => (
+                        <li key={item}>{item}</li>
+                    ))}
+                </ul>
+            ) : (
+                <div>No items are selected - yet.</div>
+            )} */}
         </div>
     );
-}
+};
 
 export default TreeView;

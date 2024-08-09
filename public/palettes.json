@@ -1,0 +1,72 @@
+[
+    {
+        "id": "palette1",
+        "name": "Cool Blue",
+        "colors": [
+            "#77E4C8",
+            "#36C2CE",
+            "#478CCF",
+            "#4535C1"
+        ]
+    },
+    {
+        "id": "palette2",
+        "name": "Seaside",
+        "colors": [
+            "#ffffcc",
+            "#a1dab4",
+            "#41b6c4",
+            "#225ea8"
+        ]
+    },
+    {
+        "id": "palette3",
+        "name": "Lilac",
+        "colors": [
+            "#f2f0f7",
+            "#cbc9e2",
+            "#9e9ac8",
+            "#6a51a3"
+        ]
+    },
+    {
+        "id": "palette4",
+        "name": "Rose-Colored Glasses",
+        "colors": [
+            "#fee5d9",
+            "#fcae91",
+            "#fb6a4a",
+            "#cb181d"
+        ]
+    },
+    {
+        "id": "palette5",
+        "name": "Noir",
+        "colors": [
+            "#f7f7f7",
+            "#cccccc",
+            "#969696",
+            "#525252"
+        ]
+    },
+    {
+        "id": "palette6",
+        "name": "Red Hue",
+        "colors": [
+            "#f1eef6",
+            "#d7b5d8",
+            "#df65b0",
+            "#ce1256"
+        ]
+    },
+    {
+        "id": "palette7",
+        "name": "Jack-o-Lantern",
+        "colors": [
+            "#f5eee6",
+            "#fccb7c",
+            "#ff8803",
+            "#862fe0"
+        ]
+    }
+]

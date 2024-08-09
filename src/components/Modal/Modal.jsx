@@ -5,14 +5,13 @@ import 'react-multi-carousel/lib/styles.css';
 import { findConcepts } from "../useCensusData";
 import Modal from '@mui/material/Modal';
 import Grid from '@mui/material/Unstable_Grid2'; // Grid version 2
+import { Tooltip } from "@mui/material";
 
 
 const ChildModal = ({ baseConcepts, activeDatasetClassButton, setValWrapper, tab, renderConcepts, confirmSelection, handleParentClose }) => {
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => {
         setOpen(true);
-
-        console.log(tab)
         renderConcepts(tab)
     };
 
@@ -81,7 +80,9 @@ const ChildModal = ({ baseConcepts, activeDatasetClassButton, setValWrapper, tab
 }
 
 
-const ModalDisplay = ({ conceptGroups, renderSubconcepts, dataTitle, setDataTitle }) => {
+const ModalDisplay = React.forwardRef(function ModalDisplay(props, ref) {
+    const { conceptGroups, renderSubconcepts, dataTitle, setDataTitle, setTitle } = props;
+
     const [activeDatasetClassButton, setActiveDatasetClassButton] = useState("All");
     const [baseConcepts, setBaseConcepts] = useState([]);
 
@@ -93,8 +94,10 @@ const ModalDisplay = ({ conceptGroups, renderSubconcepts, dataTitle, setDataTitl
 
     const confirmSelection = () => {
         console.log('Confirming selection of ', valWrapper);
-        setDataTitle(activeDatasetClassButton + ' - ' + valWrapper.text)
+        setTitle(activeDatasetClassButton + ' => ' + valWrapper.text)
+        setDataTitle(valWrapper.text)
         renderSubconcepts(valWrapper.group);
+        // need to also reset the boolean state,. but for this we prob should use reducer
     }
 
     const renderConcepts = (form) => {
@@ -106,31 +109,10 @@ const ModalDisplay = ({ conceptGroups, renderSubconcepts, dataTitle, setDataTitl
             setBaseConcepts(c);
         }
         pullData();
-        // activateForm(form)
     }
 
-    const responsive = {
-        superLargeDesktop: {
-            // the naming can be any, depends on you.
-            breakpoint: { max: 4000, min: 3000 },
-            items: 5
-        },
-        desktop: {
-            breakpoint: { max: 3000, min: 1024 },
-            items: 3
-        },
-        tablet: {
-            breakpoint: { max: 1024, min: 464 },
-            items: 2
-        },
-        mobile: {
-            breakpoint: { max: 464, min: 0 },
-            items: 1
-        }
-    };
-
     return (
-        <>
+        <div {...props} ref={ref}>
             <button onClick={handleOpen} className="btn-modal">
                 {dataTitle}
             </button>
@@ -146,19 +128,16 @@ const ModalDisplay = ({ conceptGroups, renderSubconcepts, dataTitle, setDataTitl
                             {conceptGroups.map((tab, index) => (
                                 <Grid xs={4} >
                                     <div class='tempContainer'>
-                                        {/* <button className={activeDatasetClassButton === tab.conceptGroup ? 'selected-dataset-class-button' : 'dataset-class-button'} id={tab.conceptGroup} onClick={() => renderConcepts(tab)}>{tab.conceptGroup}</button> */}
                                         <ChildModal baseConcepts={baseConcepts} activeDatasetClassButton={activeDatasetClassButton} setValWrapper={setValWrapper} tab={tab} renderConcepts={renderConcepts} confirmSelection={confirmSelection} handleParentClose={handleClose} />
                                     </div>
                                 </Grid>
                             ))}
                         </Grid>
-                        {/* <ChildModal baseConcepts={baseConcepts} activeDatasetClassButton={activeDatasetClassButton} setValWrapper={setValWrapper} /> */}
-                        {/* <button className="confirm-selection" onClick={confirmSelection}>Confirm Selection</button> */}
                     </div>
                 </div>
             </Modal>
-        </>
+        </div>
     );
-}
+});
 
 export default ModalDisplay;

@@ -30,6 +30,8 @@ body {
     align-items: center;
     justify-content: center;
 
+    position: relative;
+
     #title {
         margin: 0;
         font-size: 24px;
@@ -38,6 +40,20 @@ body {
     #canvasTitle {
         margin: 0;
         font-size: 20px;
+    }
+
+    .modal-display {
+        flex: 1;
+        text-align: center;
+    }
+
+    .settings-modal {
+        position: absolute;
+        right: 20px;
+
+        .btn-modal {
+            background-color: #005790 !important;
+        }
     }
 }
 
@@ -62,6 +78,7 @@ body {
             color: white;
             padding: 10px 50px;
             border-radius: 5px;
+            width: 15%;
 
             ul {
                 list-style: none;
@@ -70,6 +87,20 @@ body {
 
                 li {
                     margin: 5px 0;
+                    display: flex;
+                    align-items: center;
+                    white-space: nowrap;
+                }
+            }
+
+            .type-selector {
+                display: flex;
+                align-items: center;
+
+                button {
+                    flex: 1;
+                    background-color: #2980b9;
+                    color: white;
                 }
             }
         }
@@ -86,13 +117,32 @@ body {
         flex-shrink: 0;
 
         #tooltips {
-            margin-bottom: 20px;
+            // just leaving a little comment here, because i'm giving up resolving it - space-btw/space-and are NOT working... uncomment the b-c: red; line and see what i mean. no clue why they're tripping.
+            height: 12%;
+            min-height: 12%;
+            max-height: 12%;
+            text-align: center;
+            // background-color: red;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            background-color: #2980b9;
+
+            margin-bottom: 5%;
+
 
             .tooltip {
-                background-color: #bdc3c7;
-                padding: 5px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+
+
+                // background-color: #2980b9;
+                // padding: 5px;
                 border-radius: 3px;
-                margin-bottom: 10px;
+                // margin-bottom: 10px;
+                height: 40%;
             }
         }
 
@@ -130,6 +180,39 @@ body {
                 flex-grow: 1;
                 overflow-y: auto;
                 overflow-x: hidden;
+
+                .currently-viewing-box {
+                    background-color: #2c3e50;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: space-around;
+
+                    h2 {
+                        font-size: 20px;
+                        background-color: #34495e;
+                        width: 100%;
+                        padding: 10px 0px 10px 0px;
+                        border-radius: 10px;
+                    }
+
+                    .query-vars-box {
+                        background-color: #34495e;
+                        padding: 10px;
+                        font-size: 14px;
+                        text-align: left;
+                        border-radius: 10px;
+                        border: 2px solid rgb(4, 30, 65);
+                    }
+
+                    border-radius: 5px;
+                    padding: 10px;
+                    text-align: center;
+
+                    button {
+                        margin-top: 10px;
+                    }
+                }
 
                 // .react-multi-carousel-list {
                 //     overflow: visible !important;
