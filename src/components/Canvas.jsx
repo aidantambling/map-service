@@ -6,7 +6,7 @@ import * as topojson from 'topojson-client';
 import './canvas.scss';
 import { geoPath, geoAlbersUsa } from 'd3-geo';
 
-const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderVal, state, dispatch, countOrPercentage, setCountOrPercentage, setSliderMax, setSliderStep, selectedCounty, setSelectedCounty, setDataTitle, selectedPalette }) => {
+const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderVal, state, dispatch, countOrPercentage, setCountOrPercentage, setSliderSettings, selectedCounty, setSelectedCounty, setDataTitle, selectedPalette }) => {
     const [countyData, setCountyData] = useState([]);
     const [populationData, setPopulationData] = useState([]);
     const [cutoffs, setCutoffs] = useState([]);
@@ -90,13 +90,19 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 let highQuantile;
                 if (countOrPercentage == 'Count') {
                     highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95) / 20) * 20;
-                    setSliderMax(getRoundedSliderSettings(highQuantile, 20, 250).max);
-                    setSliderStep(getRoundedSliderSettings(highQuantile, 20, 250).step);
+                    setSliderSettings(prev => ({
+                        ...prev,
+                        max: getRoundedSliderSettings(highQuantile, 20, 250).max,
+                        step: getRoundedSliderSettings(highQuantile, 20, 250).step
+                    }))
                 }
                 else {
                     highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95));
-                    setSliderMax(getRoundedSliderSettings(highQuantile, 20, 0.5).max);
-                    setSliderStep(getRoundedSliderSettings(highQuantile, 20, 0.5).step);
+                    setSliderSettings(prev => ({
+                        ...prev,
+                        max: getRoundedSliderSettings(highQuantile, 20, 0.5).max,
+                        step: getRoundedSliderSettings(highQuantile, 20, 0.5).step
+                    }))
                 }
 
                 let roundMatrix;
