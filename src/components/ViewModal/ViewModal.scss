@@ -1,12 +1,53 @@
 .view-modal {
-    display: block;
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: #2980b9;
-    color: white;
-    border: none;
+    flex: 1;
+    flex-grow: 1;
+    height: 100%;
+    max-width: 30%;
+
+    .view-modal-btn {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        align-items: center;
+        justify-content: space-evenly;
+
+        .vm-button-title {
+            display: block;
+            color: white;
+            font-size: 20px;
+            height: 25%;
+            margin: 0px;
+        }
+
+        .vm-button-sub {
+            color: rgb(255, 255, 255, 0.4);
+            font-size: 14px;
+            height: 25%;
+            margin: 0px;
+        }
+    }
+
+    .sm-primary {
+        color: white;
+    }
+}
+
+.view-modal-container {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    max-width: 600px;
+    max-height: 600px;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) !important;
+
+
+    background: #f1f1f1;
+    padding: 50px 90px;
     border-radius: 3px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    overflow-y: auto !important;
 }

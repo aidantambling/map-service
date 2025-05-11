@@ -19,7 +19,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     // const countyURL = 'https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json';
 
     const zoomBehavior = d3.zoom()
-        .scaleExtent([1, 8])
+        .scaleExtent([0.9, 8])
         .on('zoom', (event) => {
             d3.select(svgRef.current).select('g').attr('transform', event.transform);
         });
@@ -42,9 +42,8 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 const populationResponse = await d3.json(populationURLs[0]);
                 setPopulationData(populationResponse.slice(1));
                 const newCutoffs = getCutoffPoints(populationResponse.slice(1), 5000);
-                console.log(newCutoffs)
                 setCutoffs(newCutoffs);
-                setDataTitle("Sex by Age - Total Population");
+                setDataTitle("Total Population");
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -56,32 +55,26 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     // re-render the map whenever the API url is changed
     useEffect(() => {
         console.log('Population Data have been changed to ', populationURLs)
-        console.log(typeof (populationURLs))
         const fetchData = async () => {
             try {
                 const fetchPromises = populationURLs.map(url => {
-                    console.log('Fetching URL:', url); // Log each URL being fetched
                     return d3.json(url);
                 }); const responses = await Promise.all(fetchPromises);
 
                 responses.forEach((response, index) => {
-                    console.log(`Response from URL ${populationURLs[index]}:`, response);
                     if (!response || !Array.isArray(response)) {
                         throw new Error(`Invalid response structure from URL ${populationURLs[index]}`);
                     }
                 });
-
-                // Combine and sum the data by county
                 const combinedDataMap = new Map();
 
                 responses.forEach(response => {
-                    console.log(response)
                     if (!response || !Array.isArray(response)) {
                         throw new Error('Invalid response structure');
                     }
                     response.slice(1).forEach(row => {
-                        const countyId = row[1]; // Assuming the county ID is in the second column
-                        const value = +row[2];  // Assuming the value to sum is in the third column
+                        const countyId = row[1];
+                        const value = +row[2];
                         if (combinedDataMap.has(countyId)) {
                             combinedDataMap.get(countyId)[2] = (parseFloat(combinedDataMap.get(countyId)[2]) + value).toString();
                         } else {
@@ -90,26 +83,18 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                     });
                 });
 
-                // Convert the combinedDataMap back to an array
                 const combinedDataArray = Array.from(combinedDataMap.values());
-
                 setPopulationData(combinedDataArray);
-
-                console.log(combinedDataArray)
 
                 const values = combinedDataArray.map(d => +d[2]); // Assuming the value to analyze is in the second column
                 let highQuantile;
                 if (countOrPercentage == 'Count') {
-                    const maxVal = Math.max(...values);
                     highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95) / 20) * 20;
-                    console.log(highQuantile)
-                    console.log(getRoundedSliderSettings(highQuantile, 20, 0.5));
                     setSliderMax(getRoundedSliderSettings(highQuantile, 20, 250).max);
                     setSliderStep(getRoundedSliderSettings(highQuantile, 20, 250).step);
                 }
                 else {
                     highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95));
-                    console.log(getRoundedSliderSettings(highQuantile, 20, 0.5));
                     setSliderMax(getRoundedSliderSettings(highQuantile, 20, 0.5).max);
                     setSliderStep(getRoundedSliderSettings(highQuantile, 20, 0.5).step);
                 }
@@ -126,10 +111,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 let optimalScore = -1;
                 roundMatrix.forEach(roundVal => {
                     const newCutoffs = getCutoffPoints(combinedDataArray, roundVal);
-                    // console.log('Rounding to ', roundVal, ': ', newCutoffs);
                     if (countOrPercentage == 'Percentage' && newCutoffs[1] == 100 && newCutoffs[1] == newCutoffs[2] && newCutoffs[2] == newCutoffs[3] && newCutoffs[3] == newCutoffs[4]) {
-                        // console.log('Meaningless percentages');
-                        //TODO: display popup saying that percentage not available for this
                         setCountOrPercentage('Count')
                     }
                     const newScore = getCountyDistribution(combinedDataArray, newCutoffs);
@@ -139,9 +121,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                     }
                 })
                 const newCutoffs = getCutoffPoints(combinedDataArray, optimalVal);
-                console.log(newCutoffs);
                 setCutoffs(newCutoffs);
-                // console.log('Optimal score: ', optimalVal);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -163,8 +143,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
     // update the legend whenever we adjust the slider, cutoff points, or viewing mode
     useEffect(() => {
-        console.log(sliderVal, cutoffs, state.viewingMode, selectedCounty)
-        updateLegend(cutoffs, state.viewingMode);
+        if (selectedPalette) updateLegend(cutoffs, state.viewingMode);
     }, [sliderVal, cutoffs, state.viewingMode, selectedCounty, selectedPalette])
 
     // whenever we access a new data API, we need to re-compute the cutoff points for quartiles
@@ -173,30 +152,21 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         const quantiles = [];
 
         for (let i = 1; i < 4; i++) {
-            // const roundVal = 1000; // value we want the quartiles to round to
             const rawq = d3.quantile(values, i / 4);
             const q = Math.round(rawq / roundVal) * roundVal
-            // const q = d3.quantile(values, i / 4) - d3.quantile(values, i / 4) % roundVal;
             quantiles.push(q);
         }
-
-        // console.log('RoundVal: ', roundVal, quantiles);
 
         return [0, ...quantiles, values[values.length - 1]];
     }
 
     // re-configure the legend
     function updateLegend(cutoffs, viewingMode) {
-        console.log('calledme', cutoffs, viewingMode)
-        let newLegendData = [];
         let legend = [];
 
-        console.log(state.comparisonMode)
-
         // cutoffs unnecessary - split by slider value
-        if (viewingMode === 'slider') {
+        if (viewingMode === 'Slider') {
             if (state.comparisonMode === 'overUnder') {
-                const colors = ['limegreen', 'tomato'];
                 let aboveLabel = `Above ${sliderVal.toLocaleString()}`;
                 let belowLabel = `Below ${sliderVal.toLocaleString()}`;
                 legend = [
@@ -237,11 +207,10 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 ];
             }
         }
-        else if (viewingMode === 'comparison') {
+        else if (viewingMode === 'Comparison') {
             if (state.comparisonMode === 'overUnder') {
                 const colors = ['limegreen', 'tomato'];
                 if (!selectedCounty || selectedCounty.stat === undefined) {
-                    console.log('couyrse 1')
                     legend = [
                         {
                             color: colors[0],
@@ -276,7 +245,6 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
             if (state.comparisonMode === 'viewCompRange') {
                 const colors = ['limegreen', 'tomato'];
                 if (!selectedCounty || selectedCounty.stat === undefined) {
-                    console.log('couyrse 1')
                     legend = [
                         {
                             color: colors[0],
@@ -310,12 +278,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
             }
 
         }
-        else if (viewingMode === 'quartile') {
-            // let filteredCutoffs = cutoffs.filter((cutoff, index) => {
-            //     if (index == 0) return true;
-            //     return index === cutoffs.length - 1 || cutoff !== cutoffs[index + 1];
-            // })
-
+        else if (viewingMode === 'Quartile') {
             const [min, q1, q2, q3, max] = cutoffs;
 
             if (q1 === q2 && q2 === q3) {
@@ -366,7 +329,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     // given a county, find its color based on the threshold and its value
     const getColor = (countyVal, countyID, sliderVal, viewingMode) => {
         if (countyVal === null) return 'black';
-        if (viewingMode === "slider") {
+        if (viewingMode === "Slider") {
             if (state.comparisonMode === 'overUnder') {
                 return countyVal >= sliderVal ? selectedPalette[3] : selectedPalette[0];
             }
@@ -374,7 +337,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 return (Math.abs(countyVal - sliderVal) <= 5000) ? selectedPalette[0] : selectedPalette[3];
             }
         }
-        if (viewingMode === 'comparison') {
+        if (viewingMode === 'Comparison') {
             if (state.comparisonMode === 'overUnder') {
                 if (countyID === selectedCounty.id) return 'purple';
                 return countyVal >= selectedCounty.stat ? 'limegreen' : 'tomato';
@@ -385,8 +348,6 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
             }
         }
 
-
-        // console.log(colorPalette)
         let filteredCutoffs = cutoffs.filter((cutoff, index) => {
             if (index == 0) return true;
             return index === cutoffs.length - 1 || cutoff !== cutoffs[index + 1];
@@ -418,7 +379,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
     // if we're in compare mode, handle selection of county
     const handleClick = (countyName, countyID, stat) => {
-        if (state.viewingMode === 'comparison') {
+        if (state.viewingMode === 'Comparison') {
             let wikiLink = `https://en.wikipedia.org/wiki/${countyName.replace(/ /g, "_")}`;
             const obj = {
                 countyName: countyName,
@@ -529,7 +490,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         const x = (bounds[0][0] + bounds[1][0]) / 2;
         const y = (bounds[0][1] + bounds[1][1]) / 2;
         const scale = 0.9 / Math.max(dx / width, dy / height);
-        const translate = [width / 2 - scale * x, height / 2 - scale * y];
+        const translate = [width / 2 - scale * x - 75, height / 2 - scale * y];
 
         setTranslateX(translate[0]);
         setTranslateY(translate[1]);

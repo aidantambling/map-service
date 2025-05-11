@@ -112,7 +112,6 @@ const reduceConcepts = (concepts) => {
 
         const match = conceptObj.concept.match(baseConceptPattern);
         if (match) {
-            console.log(match[1]);
             return {
                 concept: match[1],
                 group: conceptObj.group
@@ -151,16 +150,11 @@ export const findConceptsFromBase = async (keyVal) => {
 
         refinedConcepts.forEach(({ concept, group }) => {
             if (!uniqueConceptsMap.has(concept)) {
-                console.log('CONCEPT: ', concept)
                 uniqueConceptsMap.set(concept, group);
             }
         });
 
-        // Convert the Map keys to an array to get the unique concepts in order
         const uniqueConcepts = Array.from(uniqueConceptsMap.entries()).map(([concept, group]) => ({ concept, group }));
-
-        console.log(uniqueConcepts, 'unique concepts')
-
         return uniqueConcepts;
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -186,36 +180,11 @@ const parseEntries = async (keyVal) => {
         }).filter(name => name !== null);
 
         const sortedArr = arr.sort((a, b) => a.name.localeCompare(b.name));
-
         return sortedArr;
     } catch (error) {
         console.error('Error fetching data:', error);
     }
 }
-
-// const buildHierarchy = (data) => {
-//     const root = { name: 'root', id: 'root', child: {} };
-
-//     data.forEach((entry) => {
-//         if (entry.path && Array.isArray(entry.path)) {
-//             let current = root;
-
-//             entry.path.forEach((segment, index) => {
-//                 segment = segment.replace(/:$/, '');
-//                 if (!current.child[segment]) {
-//                     current.child[segment] = {
-//                         text: segment,
-//                         id: segment,
-//                         child: {},
-//                     }
-//                 }
-//                 current = current.child[segment]
-//             });
-//         }
-//     });
-
-//     return [root.child];
-// };
 
 // take the split data and make it into an object compatible with the nested dropdown
 const buildHierarchy = (data, categoryPrefix) => {
@@ -230,10 +199,6 @@ const buildHierarchy = (data, categoryPrefix) => {
                 segment = segment.replace(/:$/, '');
                 if (current && current.children === null) {
                     current.children = {};
-                    current.children['Total'] = {
-                        name: current.name,
-                        children: null
-                    }
                 }
                 if (!current.children) {
                     current.children = {};
@@ -246,7 +211,7 @@ const buildHierarchy = (data, categoryPrefix) => {
                         }
                         :
                         {
-                            name: null,
+                            name: entry.name,
                             children: {}
                         };
                 }
@@ -266,7 +231,6 @@ const buildHierarchy = (data, categoryPrefix) => {
     // map the hierarchical object to fit the import constraints of RecursiveSelect.jsx
     const transformNode = (node, category = 'Total', fullPath = categoryPrefix) => {
         if (!node) {
-            console.log('No nodes')
             return [];
         }
         if (!node.children) {
@@ -309,13 +273,22 @@ const buildHierarchy = (data, categoryPrefix) => {
     const estimateNode = root.children.Estimate;
     const firstChild = getFirstChild(estimateNode);
 
-
     if (!firstChild) {
         console.error('No child node is defined under Estimate.');
         return [];
     }
 
-    return transformNode(firstChild);
+    const bullshit = transformNode(firstChild);
+    firstChild.children = bullshit;
+    const returnNode = {
+        category: 'Tier 1',
+        children: bullshit,
+        fullpath: categoryPrefix,
+        group: firstChild.name,
+        id: firstChild.name + '-' + 'dummy',
+        label: categoryPrefix
+    }
+    return returnNode;
 };
 
 // for a given keyVal, get its 'labels'
@@ -323,8 +296,6 @@ export const getVariablesFromConcept = async (keyVal, category) => {
     const [group, suffix] = keyVal.split('_');
 
     const parsedSet = await parseEntries(group + '_');
-    // console.log(parsedSet)
-    // const hierarchy = buildHierarchy(parsedSet);
-    // console.log(hierarchy)
+
     return JSON.stringify(buildHierarchy(parsedSet, category), null, 2)
 }

@@ -1,278 +1,239 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap');
-
-* {
-    font-family: 'Source Sans Pro', sans-serif;
-}
-
-/* Ensure the html and body take full height and have no margin */
-html,
-body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    font-family: Arial, sans-serif;
-}
-
 #mainContainer {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
+    display: grid;
+    grid-template-columns: 3fr 1fr; // 75% canvas, 25% sidebar
+    grid-template-rows: 1fr 6fr; // Top row gets more height
+    width: 100%;
+    height: 100vh; // Full viewport height
 
-#titleContainer,
-#canvasTitleContainer {
-    background-color: #34495e;
-    color: white;
-    flex: 1; // each is 1/10 vertical screen space
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    position: relative;
-
-    #title {
-        margin: 0;
-        font-size: 24px;
+    .title-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2em;
+        background-color: #152238;
     }
 
-    #canvasTitle {
-        margin: 0;
-        font-size: 20px;
-    }
+    .settings-container {
+        background-color: #152238;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
 
-    .modal-display {
-        flex: 1;
-        text-align: center;
-    }
-
-    .settings-modal {
-        position: absolute;
-        right: 20px;
-
-        .btn-modal {
-            background-color: #005790 !important;
+        .modal-container {
+            height: 75%;
+            width: 90%;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-around;
         }
     }
+
 }
 
-#bodyContainer {
+.canvas-container {
+    grid-column: 1 / 2;
+    grid-row: 2;
+    background: rgb(21, 34, 56);
+    background: linear-gradient(22deg, #152238 0%, #2c3e50 48%, #23395d 100%);
+    position: relative;
     display: flex;
-    flex: 8; // remaining 8/10 vertical screen space
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     overflow: hidden;
 
     #canvas-panel {
-        flex: 7; // takes up left 7/8 of the body
+        width: 100%;
+        height: 100%;
         position: relative;
-        background-color: #2c3e50;
-        color: white;
-        max-height: 100%;
-        overflow: hidden;
 
-        #legend-scale {
+        .tempDiv-high {
             position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 50px;
-            border-radius: 5px;
-            width: 15%;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            // background-color: red;
+            background: rgb(21, 34, 56);
+            background: linear-gradient(22deg, rgba(21, 34, 56, 1) 0%, rgba(44, 62, 80, 1) 48%, rgba(35, 57, 93, 1) 100%);
+            z-index: 5;
+        }
 
-            ul {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-
-                li {
-                    margin: 5px 0;
-                    display: flex;
-                    align-items: center;
-                    white-space: nowrap;
-                }
-            }
-
-            .type-selector {
-                display: flex;
-                align-items: center;
-
-                button {
-                    flex: 1;
-                    background-color: #2980b9;
-                    color: white;
-                }
-            }
+        .tempDiv-low {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            // background-color: red;
+            background: rgb(21, 34, 56);
+            background: linear-gradient(22deg, rgba(21, 34, 56, 1) 0%, rgba(44, 62, 80, 1) 48%, rgba(35, 57, 93, 1) 100%);
+            z-index: -5;
         }
     }
 
-    #info-panel {
-        flex: 1; // takes up remaining 1/8 of the body
+    #legend-scale {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 10px 50px;
+        border-radius: 5px;
+        width: 15%;
+        z-index: 6;
+
+        h3 {
+            color: white;
+            width: none;
+            text-align: left;
+            width: 100%;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                margin: 5px 0;
+                display: flex;
+                align-items: center;
+                white-space: nowrap;
+            }
+        }
+
+        .type-selector {
+            display: flex;
+            align-items: center;
+
+            button {
+                flex: 1;
+                background-color: #2980b9;
+                color: white;
+            }
+        }
+    }
+}
+
+.panel-container {
+    grid-column: 2 / 3;
+    grid-row: 2;
+    padding: 20px;
+    overflow-y: auto;
+
+    background-color: #152238;
+    border-left: 2px solid #142231; // Match with canvas
+
+    // flex: 1; // takes up remaining 1/8 of the body
+    // display: flex;
+    // flex-direction: column;
+    // background-color: #ecf0f1;
+    // padding: 20px;
+    // max-height: 100vh;
+    // overflow-y: auto;
+    // flex-shrink: 0;
+
+    #tooltips {
+        // just leaving a little comment here, because i'm giving up resolving it - space-btw/space-and are NOT working... uncomment the b-c: red; line and see what i mean. no clue why they're tripping.
+        height: 12%;
+        min-height: 12%;
+        max-height: 12%;
+        text-align: center;
         display: flex;
         flex-direction: column;
-        background-color: #ecf0f1;
-        padding: 20px;
-        max-height: 100vh;
-        overflow-y: auto;
-        flex-shrink: 0;
+        justify-content: space-around;
+        background-color: #2c3e50;
 
-        #tooltips {
-            // just leaving a little comment here, because i'm giving up resolving it - space-btw/space-and are NOT working... uncomment the b-c: red; line and see what i mean. no clue why they're tripping.
-            height: 12%;
-            min-height: 12%;
-            max-height: 12%;
-            text-align: center;
-            // background-color: red;
+        margin-bottom: 5%;
+
+
+        .tooltip {
             display: flex;
             flex-direction: column;
-            justify-content: space-around;
-            background-color: #2980b9;
-
-            margin-bottom: 5%;
+            align-items: center;
+            justify-content: center;
 
 
-            .tooltip {
+            // background-color: #2980b9;
+            // padding: 5px;
+            border-radius: 3px;
+            // margin-bottom: 10px;
+            height: 40%;
+        }
+    }
+
+    .sideMenu {
+        margin-top: 20px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        .sideMenuContent {
+            background-color: rgb(16, 70, 95);
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+
+            h2 {
+                text-align: center;
+            }
+
+            .MuiTreeItem-label,
+            .MuiTreeItem-iconContainer,
+            .MuiTreeItem-checkbox {
+                color: white !important;
+            }
+
+            .MuiTreeItem-root:hover {
+                background-color: rgb(49, 83, 197);
+            }
+
+            .Mui-selected {
+                background-color: black;
+            }
+
+            .currently-viewing-box {
+                background-color: #2c3e50;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                justify-content: center;
+                justify-content: space-around;
+                border-radius: 5px;
+                padding: 10px;
+                text-align: center;
 
-
-                // background-color: #2980b9;
-                // padding: 5px;
-                border-radius: 3px;
-                // margin-bottom: 10px;
-                height: 40%;
-            }
-        }
-
-        .active-mode-btn {
-            background-color: #27ae60;
-        }
-
-        #description {
-            margin-top: 20px;
-        }
-
-        .toggleButton {
-            display: block;
-            width: 100%;
-            margin-bottom: 10px;
-            padding: 10px;
-            background-color: #2980b9;
-            color: white;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .sideMenu {
-            margin-top: 20px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-
-            .sideMenuContent {
-                display: flex;
-                flex-direction: column;
-                flex-grow: 1;
-                overflow-y: auto;
-                overflow-x: hidden;
-
-                .currently-viewing-box {
-                    background-color: #2c3e50;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: space-around;
-
-                    h2 {
-                        font-size: 20px;
-                        background-color: #34495e;
-                        width: 100%;
-                        padding: 10px 0px 10px 0px;
-                        border-radius: 10px;
-                    }
-
-                    .query-vars-box {
-                        background-color: #34495e;
-                        padding: 10px;
-                        font-size: 14px;
-                        text-align: left;
-                        border-radius: 10px;
-                        border: 2px solid rgb(4, 30, 65);
-                    }
-
-                    border-radius: 5px;
-                    padding: 10px;
-                    text-align: center;
-
-                    button {
-                        margin-top: 10px;
-                    }
+                h2 {
+                    font-size: 20px;
+                    width: 100%;
+                    padding: 10px 0px 10px 0px;
+                    border-radius: 10px;
                 }
 
-                // .react-multi-carousel-list {
-                //     overflow: visible !important;
-                // }
-
-                // .react-multi-carousel-track {
-                //     button {
-                //         background-color: #305555;
-                //         color: #FDF1E7;
-                //         width: 100%;
-                //         display: -webkit-box;
-                //         -webkit-box-orient: vertical;
-                //         overflow: hidden;
-                //         text-overflow: ellipsis;
-                //         height: 200px;
-                //         border: 1px solid #FDF1E7;
-                //         border-radius: 5px;
-                //         transition: all 1s ease;
-                //     }
-
-                //     .selected-dataset-class-button {
-                //         background-color: #8e44ad !important;
-                //     }
-
-                //     .dataset-class-button {
-                //         background-color: #89acc3 !important;
-                //     }
-                // }
-
+                .query-vars-box {
+                    background-color: #34495e;
+                    color: white !important;
+                    padding: 10px;
+                    font-size: 14px;
+                    text-align: left;
+                    border-radius: 10px;
+                    border: 2px solid rgb(4, 30, 65);
+                }
 
                 button {
-                    margin-bottom: 5px;
-                }
-
-                button:hover {
-                    background-color: #3498db;
+                    margin-top: 10px;
                 }
             }
 
-            .dynamic-form {
-                margin-top: 20px;
 
-                .e-listview,
-                // not working
-                .e-list-text {
-                    display: block;
-                    width: 100%;
-                    margin-bottom: 10px;
-                    padding: 10px;
-                    background-color: #e74c3c !important;
-                    color: white;
-                    border: none;
-                    border-radius: 3px;
-                    cursor: pointer;
-                    transition: background-color 0.3s;
-                }
+            button {
+                margin-bottom: 5px;
             }
         }
-
-
     }
 }
 
@@ -282,4 +243,8 @@ body {
 
 g {
     color: #FDF1E7
+}
+
+.TreeView {
+    color: white !important;
 }
