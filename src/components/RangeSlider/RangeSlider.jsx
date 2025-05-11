@@ -2,10 +2,13 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
 
-const RangeSlider = ({ max, step, sliderVal, setSliderVal }) => {
+const RangeSlider = ({ max, step, sliderVal, setSliderSettings }) => {
 
     const handleChange = (event, newValue) => {
-        setSliderVal(newValue);
+        setSliderSettings(prev => ({
+            ...prev,
+            val: newValue
+        }))
     }
 
     return (

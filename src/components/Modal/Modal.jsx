@@ -53,7 +53,7 @@ Fade.propTypes = {
 };
 
 const ModalDisplay = React.forwardRef(function ModalDisplay(props, ref) {
-    const { conceptGroups, renderSubconcepts, dataTitle, setDataTitle, setTitle } = props;
+    const { nameGroups, renderConcepts, dataTitle, setDataTitle, setTitle } = props;
 
     // store selected nameGroup, superConcept (and superConcept digit code)
     const [valWrapper, setValWrapper] = useState([]);
@@ -80,11 +80,11 @@ const ModalDisplay = React.forwardRef(function ModalDisplay(props, ref) {
         // namegroup => superconcept
         setTitle(valWrapper.nameGroup + ' => ' + valWrapper.superconcept)
         setDataTitle(valWrapper.superconcept)
-        renderSubconcepts(valWrapper.group);
+        renderConcepts(valWrapper.group);
     }
 
     // based on selection of 41 nameGroups, find their superConcepts for carousel
-    const renderConcepts = (form) => {
+    const renderSuperConcepts = (form) => {
         const pullData = async () => {
             const c = await findConcepts(form.groupPrefix);
             setSuperConcepts(c);
@@ -107,7 +107,7 @@ const ModalDisplay = React.forwardRef(function ModalDisplay(props, ref) {
         setSecondPosition({ x: 400, y: 0 });
 
         setOpen(true);
-        renderConcepts(nameGroup)
+        renderSuperConcepts(nameGroup)
         setTimeout(() => {
             setLoading(false);
         }, 1500)
@@ -160,7 +160,7 @@ const ModalDisplay = React.forwardRef(function ModalDisplay(props, ref) {
                                         {
                                             // map the nameGroups to a grid of 41 items.
                                             // conceptGroup field = name (e.g. Sex by Age). groupPrefix field = namegroup prefix (e.g. B01)
-                                            conceptGroups.map((nameGroup, index) => (
+                                            nameGroups.map((nameGroup, index) => (
                                                 <Grid item xs={4} key={index}>
                                                     <div className={'grid-item'}>
                                                         <Tooltip title={nameGroup.conceptGroup} PopperProps={{ style: { zIndex: 9999 } }}>
