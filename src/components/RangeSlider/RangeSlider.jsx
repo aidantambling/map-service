@@ -5,7 +5,6 @@ import Slider from '@mui/material/Slider';
 const RangeSlider = ({ max, step, sliderVal, setSliderVal }) => {
 
     const handleChange = (event, newValue) => {
-        console.log(newValue);
         setSliderVal(newValue);
     }
 

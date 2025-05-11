@@ -2,64 +2,63 @@ import * as React from 'react';
 import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
+// import { TreeViewSelectionPropagation } from '@mui/x-tree-view/models';
 import { useTreeViewApiRef } from '@mui/x-tree-view/hooks';
 import './TreeView.scss';
 
-const TreeView = ({ items, addVarToQuery, setQueryVars, queryVars }) => {
-    // const [selectedItems, setSelectedItems] = useState([]);
+const TreeView = ({ items, setQueryVars, queryVars }) => {
     const apiRef = useTreeViewApiRef();
 
-    // useEffect(() => {
-    //     // if (selectedItems) {
-    //     //     selectedItems.forEach((itemId) => {
-    //     //         setGreen(itemId, '#A9D6DC');
-    //     //     });
-    //     // }
-    // }, [selectedItems]);
-
-    // const setGreen = (itemID, colorCode) => {
-    //     const itemElement = apiRef.current.getItemDOMElement(itemID);
-    //     if (itemElement) {
-    //         console.log('element ', itemID, ' found - changing color')
-    //         itemElement.style.backgroundColor = colorCode;
-    //     }
-    // };
-
-    const toggleProcess = (event, ids) => {
-        const variable = {
-            fullpath: selectedItem.fullpath,
-            access: selectedItem.group,
-            id: selectedItem.id,
-        }
-        console.log(selectedItem.id);
-        console.log(variable)
-        // setQueryVars([...queryVars, variable])
-        // if (selectedItems.includes(selectedItem.id)) { // if its included, we should remove it
-        //     console.log('Removing selection of ', selectedItem.id)
-        //     // const newSelectedItems = selectedItems.filter((id) => id !== selectedItem.id);
-        //     // setGreen(selectedItem.id, '#ecf0f1');
-        //     // setSelectedItems(newSelectedItems);
-        // } else {
-        //     console.log('Adding selection of ', selectedItem.id)
-        //     // const newSelectedItems = [...selectedItems, selectedItem.id];
-        //     // setSelectedItems(newSelectedItems);
-        // }
-    }
+    const [selectionPropagation, setSelectionPropagation] = React.useState({
+        parents: true,
+        descendants: true,
+    });
 
     useEffect(() => {
         console.log(queryVars)
     }, [queryVars])
 
+    useEffect(() => {
+        setQueryVars([]);
+    }, [items])
+
     const handleItemSelectionToggle = (event, ids) => {
         let selectedItems = [];
+        let newItems = [];
+        console.log(ids.length);
         for (const id of ids) {
             const selectedItem = findItemById(items, id);
-            if (selectedItem && !selectedItems.includes(selectedItem)) {
-                selectedItems = [...selectedItems, selectedItem]
+            if (!queryVars?.includes(selectedItem)) {
+                newItems = [...newItems, selectedItem];
+            }
+            else {
+                selectedItems = [...selectedItems, selectedItem];
             }
         }
-        // console.log(selectedItems)
-        setQueryVars(selectedItems)
+        let allItems = selectedItems.concat(newItems);
+        const filteredItems = [];
+
+        allItems.sort((a, b) => a?.fullpath?.length - b?.fullpath?.length);
+        for (let item of allItems) {
+            if (!item) continue;
+            if (!filteredItems.some(parent => item.fullpath.startsWith(parent.fullpath))) {
+                filteredItems.push(item);
+            }
+        }
+        // selectedItems.forEach((selectedItem) => {
+        //     if (!newItems) return;
+        //     newItems.
+        //     // are any of the selectedItems children of the newItem? - is newItem.fullpath contained in any of the selectedItems.fullpath?
+        //     // console.log(newItem.fullpath, ' --- ', selectedItem.fullpath.substring(0, newItem.fullpath.length));
+        //     if (newItem.fullpath === selectedItem.fullpath.substring(0, newItem.fullpath.length)) {
+        //         console.log('redundant parent selected')
+        //     }
+        //     if (newItem.fullpath.substring(0, selectedItem.fullpath.length) === selectedItem.fullpath) {
+        //         console.log('redundant child selected')
+        //     }
+        // })
+        // const newSelections = (newItem) ? [...selectedItems, newItem] : selectedItems;
+        setQueryVars(filteredItems);
     };
 
     const findItemById = (items, itemId) => {
@@ -84,25 +83,24 @@ const TreeView = ({ items, addVarToQuery, setQueryVars, queryVars }) => {
                     <RichTreeView
                         items={items}
                         apiRef={apiRef}
-                        // onItemSelectionToggle={handleItemSelectionToggle}
                         onSelectedItemsChange={handleItemSelectionToggle}
-                        checkboxSelection={true}
-                        multiSelect={true}
-                    // selectedItems={queryVars}
+                        checkboxSelection
+                        multiSelect
+                        selectionPropagation={selectionPropagation}
                     />
                 </Box>
             ) : (
                 <div className='err-msg'>Select a dataset to open the query constructor!</div>
             )}
-            {/* {selectedItems?.length ? 0 > (
+            {queryVars?.length ? 0 > (
                 <ul>
-                    {selectedItems.map((item) => (
+                    {queryVars.map((item) => (
                         <li key={item}>{item}</li>
                     ))}
                 </ul>
             ) : (
                 <div>No items are selected - yet.</div>
-            )} */}
+            )}
         </div>
     );
 };

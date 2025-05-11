@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./ViewModal.scss";
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
@@ -20,13 +20,11 @@ const ViewModal = ({ state, dispatch }) => {
     const [customColors, setCustomColors] = useState(['#ffffff', '#ffffff', '#ffffff', '#ffffff']);
     const [selectedBox, setSelectedBox] = useState(null);
 
-    console.log(state)
-
-
     return (
-        <div className='settings-modal'>
-            <button onClick={handleOpen} className="view-modal">
-                Change View
+        <div className='view-modal'>
+            <button onClick={handleOpen} className="view-modal-btn">
+                <p className='vm-button-title'>Display</p>
+                <p className='vm-button-sub'>{state.viewingMode}</p>
             </button>
             <Modal
                 open={open}
@@ -34,11 +32,11 @@ const ViewModal = ({ state, dispatch }) => {
                 aria-labelledby="modal-modal-title"
                 aria-describedby="modal-modal-description"
             >
-                <div className='modal-container'>
+                <div className='view-modal-container'>
                     <div className="modal-content">
-                        <button id="quartileButton" className={state.viewingMode === 'quartile' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewQuartile' })}>Quartile View</button>
-                        <button id="sliderButton" className={state.viewingMode === 'slider' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewSlider' })}>Slider View</button>
-                        <button id="comparisonButton" className={state.viewingMode === 'comparison' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewComparison' })}>Comparison View</button>
+                        <button id="quartileButton" className={state.viewingMode === 'Quartile' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewQuartile' })}>Quartile View</button>
+                        <button id="sliderButton" className={state.viewingMode === 'Slider' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewSlider' })}>Slider View</button>
+                        <button id="comparisonButton" className={state.viewingMode === 'Comparison' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewComparison' })}>Comparison View</button>
                     </div>
                 </div>
             </Modal>

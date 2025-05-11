@@ -1,27 +1,28 @@
 import React, { useState, useReducer, useEffect, useRef } from 'react';
 import Canvas from './components/Canvas';
-import DynamicForm from './components/DynamicForm';
 import { paramToURL } from './components/UrlGenerators';
 import { getVariablesFromConcept, findConceptsFromBase, fetchConceptGroups, findConcepts } from './components/useCensusData';
-import Carousel from 'react-multi-carousel';
-import 'react-multi-carousel/lib/styles.css';
 import './App.scss';
-import { active } from 'd3';
 import ModalDisplay from './components/Modal/Modal';
 import TreeView from './components/TreeView/TreeView';
 import { Tooltip } from '@mui/material';
 import SettingsModal from './components/SettingsModal/SettingsModal';
 import RangeSlider from './components/RangeSlider/RangeSlider';
 import ViewModal from './components/ViewModal/ViewModal';
+import { styled, alpha } from '@mui/material/styles';
+import { TreeItem, treeItemClasses } from '@mui/x-tree-view/TreeItem';
+import SpinnerLoader from './components/SpinnerLoader/SpinnerLoader';
+
+
 
 const reducer = (state, action) => {
     switch (action.type) {
         case 'viewQuartile':
-            return { viewingMode: 'quartile' };
+            return { viewingMode: 'Quartile' };
         case 'viewSlider':
-            return { viewingMode: 'slider', comparisonMode: 'overUnder' };
+            return { viewingMode: 'Slider', comparisonMode: 'overUnder' };
         case 'viewComparison':
-            return { viewingMode: 'comparison', comparisonMode: 'overUnder' };
+            return { viewingMode: 'Comparison', comparisonMode: 'overUnder' };
         case 'viewOverUnder':
             return { viewingMode: state.viewingMode, comparisonMode: 'overUnder' };
         case 'viewCompRange':
@@ -32,7 +33,7 @@ const reducer = (state, action) => {
 }
 
 const App = () => {
-    const [state, dispatch] = useReducer(reducer, { viewingMode: 'quartile', comparisonMode: 'over/under' });
+    const [state, dispatch] = useReducer(reducer, { viewingMode: 'Quartile', comparisonMode: 'over/under' });
     const [populationURLs, setPopulationURLs] = useState([
         'https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,B01003_001E&for=county:*'
     ]);
@@ -47,6 +48,7 @@ const App = () => {
     const [sliderVal, setSliderVal] = useState(0);
 
     const [dataTitle, setDataTitle] = useState("Loading...");
+    const [title, setTitle] = useState('Sex by Age => Total Population')
     const [legendData, setLegendData] = useState([]);
 
     // change the data from a "count" context to a "percentage" context, and vice-versa
@@ -54,16 +56,13 @@ const App = () => {
 
     // changing the view mode
     const [selectedCounty, setSelectedCounty] = useState([]);
-    const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
 
     const [palettes, setPalettes] = useState(null);
     const [selectedPalette, setSelectedPalette] = useState('');
     const [conceptGroups, setConceptGroups] = useState([]);
     const [concepts, setConcepts] = useState();
-    const [queryVars, setQueryVars] = useState([])
-
-    const [currentlyViewing, setCurrentlyViewing] = useState(true)
-    const [title, setTitle] = useState('Sex by Age => Sex by Age')
+    const [queryVars, setQueryVars] = useState([]);
+    const [displayedQueryVars, setDisplayedQueryVars] = useState([]); // better way to do this?
 
     useEffect(() => {
         setSliderVal("0");
@@ -138,23 +137,6 @@ const App = () => {
         }
     };
 
-    const toggleViewMenu = () => {
-        setIsViewMenuOpen(!isViewMenuOpen);
-    };
-
-    const fetchColorPalettes = async () => {
-        const response = await fetch('/palettes.json');
-        const data = await response.json();
-        setPalettes(data)
-        setSelectedPalette(data[0].colors)
-        console.log(data)
-    }
-
-    useEffect(() => {
-        fetchColorPalettes();
-    }, [])
-
-
     // 1. upon loading the dataset, fetch the top-level concept groups to display
     useEffect(() => {
         fetchConceptGroups().then(conceptGroups => setConceptGroups(conceptGroups));
@@ -165,18 +147,12 @@ const App = () => {
 
     // 3. when a user selects a concept, display its subconcepts.
     const renderSubconcepts = async (form) => {
-        console.log(form)
         const pullData = async () => {
             let c = await findConceptsFromBase(form.slice(0, 6));
 
             const promises = c.map(async (entry) => {
                 const children = await renderLabels(entry.group, entry.concept);
-                return {
-                    id: entry.group,
-                    group: entry.group,
-                    label: entry.concept,
-                    children: children,
-                };
+                return children;
             });
 
             const result = await Promise.all(promises);
@@ -187,7 +163,6 @@ const App = () => {
 
     // 4. labels are tied to a subconcept. so when the user selects a concept (implicitly selecting subconcept) or explicitly selects subconcept, display the labels
     const renderLabels = async (formVal, category) => {
-        console.log(formVal)
         const pullData = async () => {
             const fetchedLabels = await getVariablesFromConcept(formVal, category);
             if (typeof fetchedLabels === 'string') {
@@ -204,103 +179,108 @@ const App = () => {
         return labels
     }
 
+    const [isToggled, setIsToggled] = useState(true);
+
     const queryAPI = () => {
         const popURLs = queryVars.map(queryVar => paramToURL(queryVar.group));
-        console.log(popURLs);
         setPopulationURLs(popURLs);
-        setCurrentlyViewing(false)
+        setDisplayedQueryVars(queryVars);
+        setIsToggled(false);
+        setTimeout(() => {
+            setTimeout(() => {
+                setIsToggled(true);
+            }, 1500)
+        }, 2000)
+
     }
 
-    const addVarToQuery = (obj) => {
-        // add some logic here - if male total, female total selected, maybe just query total? or if total selected, and male total selected, rm total?
-        const variable = {
-            fullpath: obj.fullpath,
-            access: obj.group,
-        }
-        setQueryVars([...queryVars, variable])
+    const fetchColorPalettes = async () => {
+        const response = await fetch('/palettes.json');
+        const data = await response.json();
+        setPalettes(data);
+        setSelectedPalette(data[0]);
     }
 
     useEffect(() => {
-        console.log(selectedPalette)
-    }, [selectedPalette])
+        fetchColorPalettes();
+    }, [])
 
     return (
         <div id="mainContainer">
-            <div id="titleContainer">
+            <div className="title-container">
                 <h2 id='title'>Census API Visualization Tool</h2>
             </div>
-            <div id="canvasTitleContainer">
-                <Tooltip title={title}>
-                    <ModalDisplay conceptGroups={conceptGroups} renderSubconcepts={renderSubconcepts} dataTitle={dataTitle} setDataTitle={setDataTitle} setTitle={setTitle} />
-                </Tooltip>
-                <SettingsModal palettes={palettes} setSelectedPalette={setSelectedPalette}></SettingsModal>
-            </div>
-            <div id='bodyContainer'>
-                <div id="canvas-panel">
-                    <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderVal={sliderVal} state={state} dispatch={dispatch} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderMax={setSliderMax} setSliderStep={setSliderStep} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} setDataTitle={setDataTitle} selectedPalette={selectedPalette} />
-                    <div id="legend-scale">
-                        <ul id='legend-labels'>
-                            {state.viewingMode === 'quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
-                            {state.viewingMode === 'slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
-                            {state.viewingMode === 'comparison' && <div className="content" style={{ height: '100%' }}>{renderComparisonData()}</div>}
-                        </ul>
-                    </div>
-                </div>
-                <div id='info-panel'>
-                    <div id="tooltips">
-                        <div class='tooltip' id='tooltip-county' ref={tooltipCountyRef}>Hover over a county</div>
-                        <div class='tooltip' id='tooltip-stat' ref={tooltipStatRef}>to see details!</div>
-                    </div>
-                    {/* <button id="toggleSideMenuButton" class='toggleButton' onClick={toggleViewMenu}>Change View</button> */}
+            <div className="settings-container">
+                <div className="modal-container">
+                    <Tooltip title={title} PopperProps={{ style: { zIndex: 1 } }}>
+                        <ModalDisplay conceptGroups={conceptGroups} renderSubconcepts={renderSubconcepts} dataTitle={dataTitle} setDataTitle={setDataTitle} setTitle={setTitle} />
+                    </Tooltip>
+                    <SettingsModal palettes={palettes} setSelectedPalette={setSelectedPalette} selectedPalette={selectedPalette}></SettingsModal>
                     <ViewModal state={state} dispatch={dispatch} />
-                    {/* {isViewMenuOpen && (
-                        // <div id="viewChanger">
-                        //     <button id="quartileButton" className={state.viewingMode === 'quartile' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewQuartile' })}>Quartile View</button>
-                        //     <button id="sliderButton" className={state.viewingMode === 'slider' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewSlider' })}>Slider View</button>
-                        //     <button id="comparisonButton" className={state.viewingMode === 'comparison' ? 'active-mode-btn' : ''} onClick={() => dispatch({ type: 'viewComparison' })}>Comparison View</button>
-                        // </div>
-                    )} */}
-                    {/* We need to implement the description... */}
-                    {/* <div id='description'>{dataDescription}</div> */}
-                    <div className="sideMenu">
-                        <div className="sideMenuContent">
-                            {
-                                currentlyViewing ?
-                                    (
-                                        <>
-                                            <TreeView items={concepts} addVarToQuery={addVarToQuery} setQueryVars={setQueryVars} queryVars={queryVars} />
-                                            {
-                                                concepts ?
-                                                    <button onClick={() => queryAPI()}>Submit</button>
-                                                    :
-                                                    <></>
-                                            }
-                                        </>
-                                    ) :
-                                    (
-                                        <>
-                                            <div className='currently-viewing-box'>
-                                                <h2>Currently selected:</h2>
-                                                <div className='query-vars-box'>
-                                                    {queryVars
-                                                        .sort((a, b) => {
-                                                            if (a.group < b.group) return -1;
-                                                            if (a.group > b.group) return 1;
-                                                            return 0;
-                                                        })
-                                                        .map((variable, index) => (
-                                                            <div key={index} style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
-                                                                <p>{variable.fullpath}</p>
-                                                            </div>
-                                                        ))}
-
-                                                </div>
-                                                <button onClick={() => setCurrentlyViewing(true)}>Change Selection</button>
-                                            </div>
-                                        </>
-                                    )
-                            }
+                </div>
+            </div>
+            <div className="canvas-container">
+                <div id="canvas-panel">
+                    <>
+                        <div className={isToggled ? 'tempDiv-low' : 'tempDiv-high'}>
+                            {isToggled ?
+                                <></>
+                                :
+                                <SpinnerLoader showSpinner={true} source={'spinner2.svg'} />}
                         </div>
+                        <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderVal={sliderVal} state={state} dispatch={dispatch} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderMax={setSliderMax} setSliderStep={setSliderStep} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} setDataTitle={setDataTitle} selectedPalette={selectedPalette.colors} />
+                        <div id="legend-scale">
+                            <h3>{dataTitle}</h3>
+                            <div className='currently-viewing-box'>
+                                <div className='query-vars-box'>
+                                    {displayedQueryVars
+                                        .sort((a, b) => {
+                                            if (a.group < b.group) return -1;
+                                            if (a.group > b.group) return 1;
+                                            return 0;
+                                        })
+                                        .map((variable, index) => (
+                                            <div key={index} style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
+                                                <p>{variable.fullpath}</p>
+                                            </div>
+                                        ))}
+
+                                </div>
+                            </div>
+                            <ul id='legend-labels'>
+                                {state.viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
+                                {state.viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
+                                {state.viewingMode === 'Comparison' && <div className="content" style={{ height: '100%' }}>{renderComparisonData()}</div>}
+                            </ul>
+                        </div>
+                    </>
+                </div>
+            </div>
+            <div className="panel-container">
+                <div id="tooltips">
+                    <div class='tooltip' id='tooltip-county' ref={tooltipCountyRef}>Hover over a county</div>
+                    <div class='tooltip' id='tooltip-stat' ref={tooltipStatRef}>to see details!</div>
+                </div>
+                {/* We need to implement the description... */}
+                {/* <div id='description'>{dataDescription}</div> */}
+                <div className="sideMenu">
+                    <div className="sideMenuContent">
+                        <h2>Search Assistant</h2>
+                        {
+                            (
+                                <>
+                                    <TreeView items={concepts} style={{ color: 'red' }} setQueryVars={setQueryVars} queryVars={queryVars} />
+                                    {
+                                        concepts ?
+                                            <button onClick={() => {
+                                                queryAPI();
+                                            }}>Submit</button>
+                                            :
+                                            <></>
+                                    }
+                                </>
+                            )
+                        }
                     </div>
                 </div>
             </div>
