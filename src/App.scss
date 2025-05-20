@@ -1,3 +1,11 @@
+button {
+    background-color: #005790 !important;
+
+    h3 {
+        color: white !important;
+    }
+}
+
 #mainContainer {
     display: grid;
     grid-template-columns: 3fr 1fr; // 75% canvas, 25% sidebar

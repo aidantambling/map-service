@@ -1,0 +1,88 @@
+body.active-modal {
+    overflow-y: hidden;
+}
+
+// modal itself
+.dataset-modal {
+    flex: 1;
+    height: 100%;
+    max-width: 30%;
+
+    // button on main screen that opens modal
+    .dataset-modal-btn {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        align-items: center;
+        justify-content: space-evenly;
+
+        .dm-button-title {
+            display: block;
+            color: white;
+            font-size: 20px;
+            height: 25%;
+            margin: 0px;
+        }
+
+        .dm-button-sub {
+            color: rgb(255, 255, 255, 0.4);
+            font-size: 14px;
+            height: 25%;
+            margin: 0px;
+        }
+    }
+}
+
+.modal-wrapper {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    max-width: 600px;
+    max-height: 600px;
+
+    position: absolute;
+    top: 20%;
+    left: 30%;
+
+
+    background: #5e89d8;
+    padding: 50px 90px;
+    border-radius: 3px;
+    overflow-y: auto !important;
+
+    .modal-container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-around;
+        overflow-y: auto !important;
+
+        .modal-title {
+            color: white;
+            font-size: 2em;
+            margin-top: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .exit-button {
+            padding: 0;
+            position: absolute;
+            top: 2%;
+            right: 2%;
+            border: none !important;
+            padding: 0 !important;
+            width: 40px;
+            height: 40px;
+
+            img {
+                height: 100%;
+                width: 100%;
+            }
+
+        }
+    }
+}

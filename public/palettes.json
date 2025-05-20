@@ -10,6 +10,16 @@
         ]
     },
     {
+        "id": "palette2",
+        "name": "Green",
+        "colors": [
+            "#E1EEBC",
+            "#90C67C",
+            "#67AE6E",
+            "#328E6E"
+        ]
+    },
+    {
         "id": "palette3",
         "name": "Lilac",
         "colors": [
@@ -21,7 +31,7 @@
     },
     {
         "id": "palette4",
-        "name": "Rose-Colored Glasses",
+        "name": "Rose",
         "colors": [
             "#fee5d9",
             "#fcae91",
