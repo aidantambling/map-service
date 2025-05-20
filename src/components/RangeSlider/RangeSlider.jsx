@@ -2,24 +2,25 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
 
-const RangeSlider = ({ max, step, sliderVal, setSliderSettings }) => {
+const RangeSlider = ({ max, step, range, setSliderSettings }) => {
+    const [value, setValue] = React.useState([20, 37]);
 
     const handleChange = (event, newValue) => {
         setSliderSettings(prev => ({
             ...prev,
-            val: newValue
+            range: newValue
         }))
-    }
+        setValue(newValue);
+    };
 
     return (
         <Slider
-            defaultValue={50}
-            aria-label="Default"
-            valueLabelDisplay="on"
+            getAriaLabel={() => 'Temperature range'}
+            value={range}
+            onChange={handleChange}
             max={max}
             step={step}
-            onChange={handleChange}
-            value={sliderVal}
+            valueLabelDisplay="auto"
         />
     );
 }

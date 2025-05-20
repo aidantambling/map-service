@@ -2,24 +2,30 @@ import React, { useState, useReducer, useEffect, useRef } from 'react';
 import Canvas from './components/Canvas';
 import { paramToURL } from './components/UrlGenerators';
 import { getVariablesFromConcept, findConceptsFromBase, fetchConceptGroups } from './components/useCensusData';
-import ModalDisplay from './components/Modal/Modal';
+import DatasetModal from './components/Modals/DatasetModal/DatasetModal';
+import ColorModal from './components/Modals/ColorModal/ColorModal';
+import DisplayModal from './components/Modals/DisplayModal/DisplayModal';
 import TreeView from './components/TreeView/TreeView';
 import { Tooltip } from '@mui/material';
-import SettingsModal from './components/SettingsModal/SettingsModal';
 import RangeSlider from './components/RangeSlider/RangeSlider';
-import ViewModal from './components/ViewModal/ViewModal';
 import SpinnerLoader from './components/SpinnerLoader/SpinnerLoader';
 import './App.scss';
+import OverUnderSlider from './components/RangeSlider/OverUnderSlider';
+import ComparisonSlider from './components/RangeSlider/ComparisonSlider';
 
 // reducer to allow swapping between view mode
 const reducer = (state, action) => {
     switch (action.type) {
         case 'viewQuartile':
             return { viewingMode: 'Quartile' };
-        case 'viewSlider':
+        case 'viewSliderOverUnder':
             return { viewingMode: 'Slider', comparisonMode: 'overUnder' };
-        case 'viewComparison':
+        case 'viewSliderRange':
+            return { viewingMode: 'Slider', comparisonMode: 'viewCompRange' };
+        case 'viewComparisonOverUnder':
             return { viewingMode: 'Comparison', comparisonMode: 'overUnder' };
+        case 'viewComparisonRange':
+            return { viewingMode: 'Comparison', comparisonMode: 'viewCompRange' };
         case 'viewOverUnder':
             return { viewingMode: state.viewingMode, comparisonMode: 'overUnder' };
         case 'viewCompRange':
@@ -45,7 +51,9 @@ const App = () => {
     const [sliderSettings, setSliderSettings] = useState({
         max: 100000,
         step: 5000,
-        val: 0
+        val: 0, // for OverUnderSlider
+        range: [0, 0], // for RangeSlider
+        compVal: 0, // for ComparisonSlider
     })
 
     const [dataTitle, setDataTitle] = useState("Loading...");
@@ -63,7 +71,16 @@ const App = () => {
 
     // color-related state devices
     const [palettes, setPalettes] = useState(null);
-    const [selectedPalette, setSelectedPalette] = useState('');
+    const [selectedPalette, setSelectedPalette] = useState({
+        "id": "palette1",
+        "name": "Cool Blue",
+        "colors": [
+            "#77E4C8",
+            "#36C2CE",
+            "#478CCF",
+            "#4535C1"
+        ]
+    });
 
     // API access
     const [nameGroups, setNameGroups] = useState([]);
@@ -73,8 +90,6 @@ const App = () => {
         current: [],
         committed: []
     })
-    // const [queryVars, setQueryVars] = useState([]);
-    // const [displayedQueryVars, setDisplayedQueryVars] = useState([]); // better way to do this?
 
     // load only the legend for quartile view
     function renderQuartileData() {
@@ -93,14 +108,16 @@ const App = () => {
     // load the legend (same as quartile view - the legend has alr been updated via useEffect in Canvas.jsx), and load the slider itself as well
     function renderSliderData() {
         return (
-            <>
-                {renderQuartileData()}
-                <RangeSlider max={sliderSettings.max} step={sliderSettings.step} sliderVal={sliderSettings.val} setSliderSettings={setSliderSettings} />
-                <div className='type-selector'>
-                    <button onClick={() => dispatch({ type: 'viewOverUnder' })}>Over/Under</button>
-                    <button onClick={() => dispatch({ type: 'viewCompRange' })}>Range</button>
-                </div>
-            </>
+            state.comparisonMode === 'overUnder' ?
+                <>
+                    {renderQuartileData()}
+                    <OverUnderSlider max={sliderSettings.max} step={sliderSettings.step} setSliderSettings={setSliderSettings} />
+                </>
+                :
+                <>
+                    {renderQuartileData()}
+                    <RangeSlider max={sliderSettings.max} step={sliderSettings.step} range={sliderSettings.range} setSliderSettings={setSliderSettings} />
+                </>
         );
     }
 
@@ -114,12 +131,9 @@ const App = () => {
                     {selectedCounty.stat}
                 </h5>
                 <h5>
-                    <a href={selectedCounty.wikiLink}>Wikipedia Link</a>
+                    <a href={selectedCounty.wikiLink}>Learn more about this county!</a>
                 </h5>
-                <div className='type-selector'>
-                    <button onClick={() => dispatch({ type: 'viewOverUnder' })}>Over/Under</button>
-                    <button onClick={() => dispatch({ type: 'viewCompRange' })}>Range</button>
-                </div>
+                <ComparisonSlider max={sliderSettings.max / 2} step={sliderSettings.step / 2} setSliderSettings={setSliderSettings} />
                 {renderQuartileData()}
             </>
         );
@@ -209,10 +223,10 @@ const App = () => {
             <div className="settings-container">
                 <div className="modal-container">
                     <Tooltip title={title} PopperProps={{ style: { zIndex: 1 } }}>
-                        <ModalDisplay nameGroups={nameGroups} renderConcepts={renderConcepts} dataTitle={dataTitle} setDataTitle={setDataTitle} setTitle={setTitle} />
+                        <DatasetModal nameGroups={nameGroups} renderConcepts={renderConcepts} dataTitle={dataTitle} setDataTitle={setDataTitle} setTitle={setTitle} />
                     </Tooltip>
-                    <SettingsModal palettes={palettes} setSelectedPalette={setSelectedPalette} selectedPalette={selectedPalette}></SettingsModal>
-                    <ViewModal state={state} dispatch={dispatch} />
+                    <ColorModal palettes={palettes} setSelectedPalette={setSelectedPalette} selectedPalette={selectedPalette} />
+                    <DisplayModal state={state} dispatch={dispatch} />
                 </div>
             </div>
             <div className="canvas-container">
@@ -224,7 +238,7 @@ const App = () => {
                                 :
                                 <SpinnerLoader showSpinner={true} source={'spinner2.svg'} />}
                         </div>
-                        <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderVal={sliderSettings.val} state={state} dispatch={dispatch} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderSettings={setSliderSettings} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} setDataTitle={setDataTitle} selectedPalette={selectedPalette.colors} />
+                        <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderSettings={sliderSettings} state={state} dispatch={dispatch} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderSettings={setSliderSettings} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} setDataTitle={setDataTitle} selectedPalette={selectedPalette.colors} />
                         <div id="legend-scale">
                             <h3>{dataTitle}</h3>
                             <div className='currently-viewing-box'>

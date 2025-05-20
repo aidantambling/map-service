@@ -6,7 +6,7 @@ import * as topojson from 'topojson-client';
 import './canvas.scss';
 import { geoPath, geoAlbersUsa } from 'd3-geo';
 
-const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderVal, state, dispatch, countOrPercentage, setCountOrPercentage, setSliderSettings, selectedCounty, setSelectedCounty, setDataTitle, selectedPalette }) => {
+const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderSettings, state, dispatch, countOrPercentage, setCountOrPercentage, setSliderSettings, selectedCounty, setSelectedCounty, setDataTitle, selectedPalette }) => {
     const [countyData, setCountyData] = useState([]);
     const [populationData, setPopulationData] = useState([]);
     const [cutoffs, setCutoffs] = useState([]);
@@ -27,8 +27,6 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     useEffect(() => {
         d3.select(svgRef.current).call(zoomBehavior);
     }, []);
-
-    // Store zoomBehavior in a ref
     zoomRef.current = zoomBehavior;
 
     // initial map render
@@ -147,11 +145,6 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         };
     }
 
-    // update the legend whenever we adjust the slider, cutoff points, or viewing mode
-    useEffect(() => {
-        if (selectedPalette) updateLegend(cutoffs, state.viewingMode);
-    }, [sliderVal, cutoffs, state.viewingMode, selectedCounty, selectedPalette])
-
     // whenever we access a new data API, we need to re-compute the cutoff points for quartiles
     function getCutoffPoints(data, roundVal) {
         const values = data.map(d => +d[2]).sort((a, b) => a - b);
@@ -173,8 +166,8 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         // cutoffs unnecessary - split by slider value
         if (viewingMode === 'Slider') {
             if (state.comparisonMode === 'overUnder') {
-                let aboveLabel = `Above ${sliderVal.toLocaleString()}`;
-                let belowLabel = `Below ${sliderVal.toLocaleString()}`;
+                let aboveLabel = `Above ${sliderSettings.val.toLocaleString()}`;
+                let belowLabel = `Below ${sliderSettings.val.toLocaleString()}`;
                 legend = [
                     {
                         color: selectedPalette[3],
@@ -191,8 +184,8 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 ];
             }
             if (state.comparisonMode === 'viewCompRange') {
-                let aboveLabel = `Within 5000 of ${sliderVal.toLocaleString()}`;
-                let belowLabel = `Outside 5000 of ${sliderVal.toLocaleString()}`;
+                let aboveLabel = `Inside ${sliderSettings.range[0]} to ${sliderSettings.range[1]}`;
+                let belowLabel = `Outside ${sliderSettings.range[0]} to ${sliderSettings.range[1]}`;
                 if (countOrPercentage === 'Percentage') {
                     aboveLabel += '%';
                     belowLabel += '%';
@@ -203,7 +196,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                         label: aboveLabel
                     },
                     {
-                        color: selectedPalette[1],
+                        color: selectedPalette[3],
                         label: belowLabel
                     },
                     {
@@ -215,11 +208,10 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         }
         else if (viewingMode === 'Comparison') {
             if (state.comparisonMode === 'overUnder') {
-                const colors = ['limegreen', 'tomato'];
                 if (!selectedCounty || selectedCounty.stat === undefined) {
                     legend = [
                         {
-                            color: colors[0],
+                            color: selectedPalette[0],
                             label: 'Select a county to color in the map!'
                         }
                     ]
@@ -234,11 +226,11 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                     }
                     legend = [
                         {
-                            color: colors[0],
+                            color: selectedPalette[0],
                             label: aboveLabel
                         },
                         {
-                            color: colors[1],
+                            color: selectedPalette[3],
                             label: belowLabel
                         },
                         {
@@ -249,30 +241,29 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 }
             }
             if (state.comparisonMode === 'viewCompRange') {
-                const colors = ['limegreen', 'tomato'];
                 if (!selectedCounty || selectedCounty.stat === undefined) {
                     legend = [
                         {
-                            color: colors[0],
+                            color: selectedPalette[0],
                             label: 'Select a county to color in the map!'
                         }
                     ]
                 }
 
                 else {
-                    let aboveLabel = `Within 5000 of ${selectedCounty.stat.toLocaleString()}`;
-                    let belowLabel = `Outside 5000 of ${selectedCounty.stat.toLocaleString()}`;
+                    let aboveLabel = `Within ${sliderSettings.compVal} of ${selectedCounty.stat.toLocaleString()}`;
+                    let belowLabel = `Outside ${sliderSettings.compVal} of ${selectedCounty.stat.toLocaleString()}`;
                     if (countOrPercentage === 'Percentage') {
                         aboveLabel += '%';
                         belowLabel += '%';
                     }
                     legend = [
                         {
-                            color: colors[0],
+                            color: selectedPalette[0],
                             label: aboveLabel
                         },
                         {
-                            color: colors[1],
+                            color: selectedPalette[3],
                             label: belowLabel
                         },
                         {
@@ -332,25 +323,30 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         }
     }
 
+    // update the legend whenever we adjust the slider, cutoff points, or viewing mode
+    useEffect(() => {
+        if (selectedPalette) updateLegend(cutoffs, state.viewingMode);
+    }, [sliderSettings.val, sliderSettings.range, cutoffs, state.viewingMode, selectedCounty, selectedPalette])
+
     // given a county, find its color based on the threshold and its value
-    const getColor = (countyVal, countyID, sliderVal, viewingMode) => {
+    const getColor = (countyVal, countyID, sliderVal, compVal, sliderRange, viewingMode) => {
         if (countyVal === null) return 'black';
         if (viewingMode === "Slider") {
             if (state.comparisonMode === 'overUnder') {
                 return countyVal >= sliderVal ? selectedPalette[3] : selectedPalette[0];
             }
             if (state.comparisonMode === 'viewCompRange') {
-                return (Math.abs(countyVal - sliderVal) <= 5000) ? selectedPalette[0] : selectedPalette[3];
+                return ((countyVal >= sliderRange[0]) && (countyVal <= sliderRange[1])) ? selectedPalette[0] : selectedPalette[3];
             }
         }
         if (viewingMode === 'Comparison') {
             if (state.comparisonMode === 'overUnder') {
-                if (countyID === selectedCounty.id) return 'purple';
-                return countyVal >= selectedCounty.stat ? 'limegreen' : 'tomato';
+                if (countyID === selectedCounty.id) return 'yellow';
+                return countyVal >= selectedCounty.stat ? selectedPalette[3] : selectedPalette[0];
             }
             if (state.comparisonMode === 'viewCompRange') {
-                if (countyID === selectedCounty.id) return 'purple';
-                return (Math.abs(countyVal - selectedCounty.stat) <= 5000) ? 'limegreen' : 'tomato';
+                if (countyID === selectedCounty.id) return 'yellow';
+                return (Math.abs(countyVal - selectedCounty.stat) <= compVal) ? selectedPalette[3] : selectedPalette[0];
             }
         }
 
@@ -527,7 +523,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                                 key={index}
                                 d={path(county)}
                                 className="county"
-                                fill={getColor(countyVal, countyID, sliderVal, state.viewingMode)}
+                                fill={getColor(countyVal, countyID, sliderSettings.val, sliderSettings.compVal, sliderSettings.range, state.viewingMode)}
                                 onMouseOver={() => { handleMouseOver(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[2] : 'Unknown') }}
                                 onMouseOut={handleMouseOut}
                                 onClick={() => handleClick(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[1] : 'Unknown', countyItem ? countyItem[2] : 'Unknown')}

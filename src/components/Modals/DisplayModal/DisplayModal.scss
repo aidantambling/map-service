@@ -1,0 +1,39 @@
+// .view-modal-container {
+//     position: fixed;
+//     width: 100vw;
+//     height: 100vh;
+//     max-width: 600px;
+//     max-height: 600px;
+
+//     position: absolute;
+//     top: 50%;
+//     left: 50%;
+//     transform: translate(-50%, -50%) !important;
+
+
+//     background: #f1f1f1;
+//     padding: 50px 90px;
+//     border-radius: 3px;
+//     overflow-y: auto !important;
+// }
+
+.view-box {
+    display: flex;
+    flex-direction: row;
+}
+
+.context-box {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+
+    h2,
+    p {
+        text-align: center;
+    }
+
+    img {
+        overflow: hidden !important;
+        max-width: 100%;
+    }
+}
