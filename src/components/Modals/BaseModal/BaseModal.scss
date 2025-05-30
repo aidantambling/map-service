@@ -59,6 +59,10 @@ body.active-modal {
         justify-content: space-around;
         overflow-y: auto !important;
 
+        .modal-header {
+            height: 10%;
+        }
+
         .modal-title {
             color: white;
             font-size: 2em;

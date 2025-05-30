@@ -12,6 +12,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^5.11.16",
     "@mui/lab": "^5.0.0-alpha.172",
     "@mui/material": "^5.16.14",
     "@mui/x-tree-view": "^8.0.0-alpha.6",
@@ -21,8 +22,6 @@
     "d3": "^7.8.5",
     "d3-zoom": "^3.0.0",
     "motion": "^11.18.0",
-    "mui-tree-select": "^1.0.0-beta.11",
-    "mui-tree-select-v6": "^1.0.3-beta.11",
     "rc-cascader": "^3.26.0",
     "react": "^18.2.0",
     "react-color-palette": "^7.2.2",

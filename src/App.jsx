@@ -1,4 +1,4 @@
-import React, { useState, useReducer, useEffect, useRef } from 'react';
+import { useState, useReducer, useEffect, useRef } from 'react';
 import Canvas from './components/Canvas';
 import { paramToURL } from './components/UrlGenerators';
 import { getVariablesFromConcept, findConceptsFromBase, fetchConceptGroups } from './components/useCensusData';
@@ -7,29 +7,26 @@ import ColorModal from './components/Modals/ColorModal/ColorModal';
 import DisplayModal from './components/Modals/DisplayModal/DisplayModal';
 import TreeView from './components/TreeView/TreeView';
 import { Tooltip } from '@mui/material';
-import RangeSlider from './components/RangeSlider/RangeSlider';
 import SpinnerLoader from './components/SpinnerLoader/SpinnerLoader';
 import './App.scss';
-import OverUnderSlider from './components/RangeSlider/OverUnderSlider';
-import ComparisonSlider from './components/RangeSlider/ComparisonSlider';
+import OverUnderUI from './components/RangeSlider/OverUnderUI';
+import RangeUI from './components/RangeSlider/RangeUI';
 
 // reducer to allow swapping between view mode
 const reducer = (state, action) => {
     switch (action.type) {
         case 'viewQuartile':
             return { viewingMode: 'Quartile' };
+        case 'viewComparison':
+            return { viewingMode: 'Comparison' };
         case 'viewSliderOverUnder':
             return { viewingMode: 'Slider', comparisonMode: 'overUnder' };
         case 'viewSliderRange':
             return { viewingMode: 'Slider', comparisonMode: 'viewCompRange' };
-        case 'viewComparisonOverUnder':
-            return { viewingMode: 'Comparison', comparisonMode: 'overUnder' };
-        case 'viewComparisonRange':
-            return { viewingMode: 'Comparison', comparisonMode: 'viewCompRange' };
-        case 'viewOverUnder':
-            return { viewingMode: state.viewingMode, comparisonMode: 'overUnder' };
-        case 'viewCompRange':
-            return { viewingMode: state.viewingMode, comparisonMode: 'viewCompRange' };
+        case 'viewInspectOverUnder':
+            return { viewingMode: 'Inspect', comparisonMode: 'overUnder' };
+        case 'viewInspectRange':
+            return { viewingMode: 'Inspect', comparisonMode: 'viewCompRange' };
         default:
             throw new Error();
     }
@@ -39,8 +36,9 @@ const App = () => {
     const [state, dispatch] = useReducer(reducer, { viewingMode: 'Quartile', comparisonMode: 'over/under' });
 
     // manage API access via url(s)
+    const api_key = import.meta.env.VITE_CENSUS_KEY
     const [populationURLs, setPopulationURLs] = useState([
-        'https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,B01003_001E&for=county:*'
+        `https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,B01003_001E&for=county:*&key=${api_key}`
     ]);
 
     // tooltip refs - passed to Canvas.jsx for value assignment based on mouse-over
@@ -53,8 +51,12 @@ const App = () => {
         step: 5000,
         val: 0, // for OverUnderSlider
         range: [0, 0], // for RangeSlider
-        compVal: 0, // for ComparisonSlider
+        // inspectVal: 0, // for InspectSlider
     })
+    const overUnderRef = useRef();
+    const lowRangeRef = useRef();
+    const highRangeRef = useRef();
+    const inspectRef = useRef();
 
     const [dataTitle, setDataTitle] = useState("Loading...");
     const [title, setTitle] = useState('Sex by Age => Total Population')
@@ -94,47 +96,68 @@ const App = () => {
     // load only the legend for quartile view
     function renderQuartileData() {
         return (
-            <div>
+            <ul>
                 {legendData.map((item, index) => (
                     <li key={index} id="legend-element">
                         <span style={{ backgroundColor: item.color, width: '2rem', height: '2rem', marginRight: '10%', display: 'flex' }}></span>
                         {item.label}
                     </li>
                 ))}
-            </div>
+            </ul>
         )
     }
 
     // load the legend (same as quartile view - the legend has alr been updated via useEffect in Canvas.jsx), and load the slider itself as well
     function renderSliderData() {
         return (
-            state.comparisonMode === 'overUnder' ?
-                <>
-                    {renderQuartileData()}
-                    <OverUnderSlider max={sliderSettings.max} step={sliderSettings.step} setSliderSettings={setSliderSettings} />
-                </>
-                :
-                <>
-                    {renderQuartileData()}
-                    <RangeSlider max={sliderSettings.max} step={sliderSettings.step} range={sliderSettings.range} setSliderSettings={setSliderSettings} />
-                </>
-        );
+            <>
+                {renderQuartileData()}
+                {state.comparisonMode === 'overUnder' ? (
+                    <OverUnderUI
+                        overUnderRef={overUnderRef}
+                        sliderSettings={sliderSettings}
+                        setSliderSettings={setSliderSettings}
+                        val={sliderSettings.val}
+                    />
+                ) : (
+                    <RangeUI
+                        lowRangeRef={lowRangeRef}
+                        highRangeRef={highRangeRef}
+                        sliderSettings={sliderSettings}
+                        setSliderSettings={setSliderSettings}
+                    />
+                )}
+            </>
+        )
     }
 
-    function renderComparisonData() {
+    function renderInspectData() {
         return (
             <>
+                <h5>{selectedCounty.countyName}</h5>
+                <h5>{selectedCounty.stat}</h5>
                 <h5>
-                    {selectedCounty.countyName}
+                    {
+                        (selectedCounty && selectedCounty?.wikiLink) ?
+                            <a href={selectedCounty.wikiLink}>Learn more about this county!</a>
+                            :
+                            <p>Select a county to color in the map!</p>
+                    }
                 </h5>
-                <h5>
-                    {selectedCounty.stat}
-                </h5>
-                <h5>
-                    <a href={selectedCounty.wikiLink}>Learn more about this county!</a>
-                </h5>
-                <ComparisonSlider max={sliderSettings.max / 2} step={sliderSettings.step / 2} setSliderSettings={setSliderSettings} />
                 {renderQuartileData()}
+                {state.comparisonMode === 'viewCompRange' ?
+                    <OverUnderUI
+                        overUnderRef={inspectRef}
+                        sliderSettings={{
+                            ...sliderSettings,
+                            max: sliderSettings.max / 2,
+                            step: sliderSettings.step / 2
+                        }}
+                        setSliderSettings={setSliderSettings}
+                    />
+                    :
+                    <></>
+                }
             </>
         );
     }
@@ -238,7 +261,7 @@ const App = () => {
                                 :
                                 <SpinnerLoader showSpinner={true} source={'spinner2.svg'} />}
                         </div>
-                        <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderSettings={sliderSettings} state={state} dispatch={dispatch} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderSettings={setSliderSettings} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} setDataTitle={setDataTitle} selectedPalette={selectedPalette.colors} />
+                        <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderSettings={sliderSettings} state={state} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderSettings={setSliderSettings} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} setDataTitle={setDataTitle} selectedPalette={selectedPalette.colors} />
                         <div id="legend-scale">
                             <h3>{dataTitle}</h3>
                             <div className='currently-viewing-box'>
@@ -257,11 +280,9 @@ const App = () => {
 
                                 </div>
                             </div>
-                            <ul id='legend-labels'>
-                                {state.viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
-                                {state.viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
-                                {state.viewingMode === 'Comparison' && <div className="content" style={{ height: '100%' }}>{renderComparisonData()}</div>}
-                            </ul>
+                            {state.viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
+                            {state.viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
+                            {state.viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
                         </div>
                     </>
                 </div>
