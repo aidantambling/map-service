@@ -15,6 +15,7 @@ const TreeView = ({ concepts, setQueryVars }) => {
 
     // clear the selected concepts when user selects a new superConcept
     useEffect(() => {
+        console.log('clearing queryvars')
         setQueryVars(prev => ({
             ...prev,
             current: []

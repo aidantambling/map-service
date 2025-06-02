@@ -1,7 +1,6 @@
 import { useState, useReducer, useEffect, useRef } from 'react';
 import Canvas from './components/Canvas';
-import { paramToURL } from './components/UrlGenerators';
-import { getVariablesFromConcept, findConceptsFromBase, fetchConceptGroups } from './components/useCensusData';
+import { getVariablesFromConcept, findConceptsFromBase, fetchConceptGroups, paramToURL } from './components/useCensusData';
 import DatasetModal from './components/Modals/DatasetModal/DatasetModal';
 import ColorModal from './components/Modals/ColorModal/ColorModal';
 import DisplayModal from './components/Modals/DisplayModal/DisplayModal';
@@ -34,6 +33,7 @@ const reducer = (state, action) => {
 
 const App = () => {
     const [state, dispatch] = useReducer(reducer, { viewingMode: 'Quartile', comparisonMode: 'over/under' });
+    const [geographyMode, setGeographyMode] = useState("County");
 
     // manage API access via url(s)
     const api_key = import.meta.env.VITE_CENSUS_KEY
@@ -58,7 +58,7 @@ const App = () => {
     const highRangeRef = useRef();
     const inspectRef = useRef();
 
-    const [dataTitle, setDataTitle] = useState("Loading...");
+    const [dataTitle, setDataTitle] = useState("Total Population");
     const [title, setTitle] = useState('Sex by Age => Total Population')
     const [legendData, setLegendData] = useState([]);
 
@@ -89,9 +89,30 @@ const App = () => {
     const [concepts, setConcepts] = useState();
 
     const [queryVars, setQueryVars] = useState({
-        current: [],
+        current: [
+            {
+                category: "Tier 1",
+                children: [
+                    {
+                        category: "Total",
+                        fullpath: "Total",
+                        group: "B01003_001E",
+                        id: "B01003_001E-Total-0",
+                        label: "Total",
+                    },
+                ],
+                fullpath: "Total",
+                group: "B01003_001E",
+                id: "B01003_001E-dummy",
+                label: "Total",
+            }
+        ],
         committed: []
     })
+
+    useEffect(() => {
+        console.log(queryVars);
+    }, [queryVars])
 
     // load only the legend for quartile view
     function renderQuartileData() {
@@ -211,6 +232,7 @@ const App = () => {
             });
 
             const result = await Promise.all(promises);
+            console.log('concepts being set')
             setConcepts(result);
         }
         await pullData();
@@ -219,7 +241,10 @@ const App = () => {
     // submit a query to the API using user-selected queryVars
     const queryAPI = () => {
         // translate the selected concepts into codes for the API
-        const popURLs = queryVars.current.map(queryVar => paramToURL(queryVar.group));
+        console.log('changing population urls, geomode is: ', geographyMode)
+        console.log(queryVars);
+        const popURLs = queryVars.current.map(queryVar => paramToURL(queryVar.group, geographyMode));
+        console.log(popURLs);
         setPopulationURLs(popURLs);
 
         // update the legend to reflect the selected concepts
@@ -227,7 +252,6 @@ const App = () => {
             ...prev,
             committed: prev.current
         }))
-        // setDisplayedQueryVars(queryVars);
 
         // use loading screen while fetching the new data
         setCanvasLoading(false);
@@ -237,6 +261,10 @@ const App = () => {
             }, 1500)
         }, 2000)
     }
+
+    useEffect(() => {
+        queryAPI();
+    }, [geographyMode])
 
     return (
         <div id="mainContainer">
@@ -261,7 +289,24 @@ const App = () => {
                                 :
                                 <SpinnerLoader showSpinner={true} source={'spinner2.svg'} />}
                         </div>
-                        <Canvas tooltipCountyRef={tooltipCountyRef} tooltipStatRef={tooltipStatRef} setLegendData={setLegendData} populationURLs={populationURLs} sliderSettings={sliderSettings} state={state} countOrPercentage={countOrPercentage} setCountOrPercentage={setCountOrPercentage} setSliderSettings={setSliderSettings} selectedCounty={selectedCounty} setSelectedCounty={setSelectedCounty} setDataTitle={setDataTitle} selectedPalette={selectedPalette.colors} />
+                        <Canvas
+                            tooltipCountyRef={tooltipCountyRef}
+                            tooltipStatRef={tooltipStatRef}
+                            setLegendData={setLegendData}
+                            populationURLs={populationURLs}
+                            sliderSettings={sliderSettings}
+                            state={state}
+                            countOrPercentage={countOrPercentage}
+                            setCountOrPercentage={setCountOrPercentage}
+                            setSliderSettings={setSliderSettings}
+                            selectedCounty={selectedCounty}
+                            setSelectedCounty={setSelectedCounty}
+                            setDataTitle={setDataTitle}
+                            selectedPalette={selectedPalette.colors}
+                            geographyMode={geographyMode}
+                            setGeographyMode={setGeographyMode}
+                            queryVars={queryVars}
+                        />
                         <div id="legend-scale">
                             <h3>{dataTitle}</h3>
                             <div className='currently-viewing-box'>

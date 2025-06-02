@@ -4,8 +4,9 @@ import { ButtonGroup } from '@mui/material';
 import * as topojson from 'topojson-client';
 import './canvas.scss';
 import { geoPath, geoAlbersUsa } from 'd3-geo';
+import VerticalToggleButtons from './VerticalToggleButtons';
 
-const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderSettings, state, countOrPercentage, setCountOrPercentage, setSliderSettings, selectedCounty, setSelectedCounty, setDataTitle, selectedPalette }) => {
+const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderSettings, state, countOrPercentage, setCountOrPercentage, setSliderSettings, selectedCounty, setSelectedCounty, setDataTitle, selectedPalette, geographyMode, setGeographyMode, queryVars }) => {
     const [countyData, setCountyData] = useState([]);
     const [populationData, setPopulationData] = useState([]);
     const [cutoffs, setCutoffs] = useState([]);
@@ -28,113 +29,113 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     }, []);
     zoomRef.current = zoomBehavior;
 
-    // initial map render
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // use d3 and topojson to get the county objects
-                const countyResponse = await d3.json('simple.json');
-                const counties = topojson.feature(countyResponse, countyResponse.objects.merged).features;
-                setCountyData(counties);
-
-                // send API query for default url (total population) and set data accordingly
-                const populationResponse = await d3.json(populationURLs[0]);
-                setPopulationData(populationResponse.slice(1));
-
-                // compute new cutoffs and set default title
-                const newCutoffs = getCutoffPoints(populationResponse.slice(1), 5000);
-                setCutoffs(newCutoffs);
-                setDataTitle("Total Population");
-            } catch (error) {
-                console.error('Error fetching data:', error);
+    const fetchGeographyData = async () => {
+        console.log('fetching geography data');
+        try {
+            // use d3 and topojson to get the county/state objects
+            const countyResponse = await d3.json(`${geographyMode}.json`);
+            let counties;
+            if (geographyMode === 'State') {
+                console.log('state approach');
+                counties = topojson.feature(countyResponse, countyResponse.objects.states).features;
             }
-        };
-        fetchData();
-    }, []);
-
-    // re-render the map whenever the API url or display mode is changed
-    useEffect(() => {
-        console.log('Population Data have been changed to ', populationURLs)
-        const fetchData = async () => {
-            try {
-                // for each of the URLs, query the API then sum each county's corresponding values
-                const fetchPromises = populationURLs.map(url => {
-                    return d3.json(url);
-                });
-                const responses = await Promise.all(fetchPromises);
-
-                responses.forEach((response, index) => {
-                    if (!response || !Array.isArray(response)) {
-                        throw new Error(`Invalid response structure from URL ${populationURLs[index]}`);
-                    }
-                });
-                const combinedDataMap = new Map();
-
-                responses.forEach(response => {
-                    if (!response || !Array.isArray(response)) {
-                        throw new Error('Invalid response structure');
-                    }
-                    response.slice(1).forEach(row => {
-                        const countyId = row[1];
-                        const value = +row[2];
-                        if (combinedDataMap.has(countyId)) {
-                            combinedDataMap.get(countyId)[2] = (parseFloat(combinedDataMap.get(countyId)[2]) + value).toString();
-                        } else {
-                            combinedDataMap.set(countyId, [...row]);
-                        }
-                    });
-                });
-
-                const combinedDataArray = Array.from(combinedDataMap.values());
-                setPopulationData(combinedDataArray);
-
-                const values = combinedDataArray.map(d => +d[2]);
-                let highQuantile;
-                if (countOrPercentage == 'Count') {
-                    highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95) / 20) * 20;
-                    setSliderSettings(prev => ({
-                        ...prev,
-                        max: getRoundedSliderSettings(highQuantile, 20, 250).max,
-                        step: getRoundedSliderSettings(highQuantile, 20, 250).step
-                    }))
-                }
-                else {
-                    highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95));
-                    setSliderSettings(prev => ({
-                        ...prev,
-                        max: getRoundedSliderSettings(highQuantile, 20, 0.5).max,
-                        step: getRoundedSliderSettings(highQuantile, 20, 0.5).step
-                    }))
-                }
-
-                let roundMatrix;
-                if (countOrPercentage == 'Count') {
-                    roundMatrix = [1, 100, 1000, 2500, 5000, 10000];
-                }
-                else {
-                    roundMatrix = [1, 0.1, 0.01];
-                }
-                // use the largest roundValue that is sufficiently balanced (score < 1000)
-                let optimalVal = -1;
-                let optimalScore = -1;
-                roundMatrix.forEach(roundVal => {
-                    const newCutoffs = getCutoffPoints(combinedDataArray, roundVal);
-                    if (countOrPercentage == 'Percentage' && newCutoffs[1] == 100 && newCutoffs[1] == newCutoffs[2] && newCutoffs[2] == newCutoffs[3] && newCutoffs[3] == newCutoffs[4]) {
-                        setCountOrPercentage('Count')
-                    }
-                    const newScore = getCountyDistribution(combinedDataArray, newCutoffs);
-                    if (optimalVal == -1 || newScore < 1000 || newScore < optimalScore) { // if score is uninit, take the score. or, take the highest roundval with reasonable score
-                        optimalVal = roundVal;
-                        optimalScore = newScore;
-                    }
-                })
-                const newCutoffs = getCutoffPoints(combinedDataArray, optimalVal);
-                setCutoffs(newCutoffs);
-            } catch (error) {
-                console.error('Error fetching data:', error);
+            else if (geographyMode === 'County') {
+                console.log('county approach');
+                counties = topojson.feature(countyResponse, countyResponse.objects.merged).features;
             }
+            // use d3 and topojson to get the county objects
+            setCountyData(counties);
+        } catch (error) {
+            console.error('Error fetching data:', error);
         }
-        fetchData();
+    }
+
+    const fetchPopulationData = async () => {
+        console.log('fetching population data')
+        try {
+            // send API query for default url (total population) and set data accordingly
+            // for each of the URLs, query the API then sum each county's corresponding values
+            const fetchPromises = populationURLs.map(url => {
+                return d3.json(url);
+            });
+            const responses = await Promise.all(fetchPromises);
+
+            responses.forEach((response, index) => {
+                if (!response || !Array.isArray(response)) {
+                    throw new Error(`Invalid response structure from URL ${populationURLs[index]}`);
+                }
+            });
+            const combinedDataMap = new Map();
+
+            responses.forEach(response => {
+                if (!response || !Array.isArray(response)) {
+                    throw new Error('Invalid response structure');
+                }
+                response.slice(1).forEach(row => {
+                    const countyId = row[1];
+                    const value = +row[2];
+                    if (combinedDataMap.has(countyId)) {
+                        combinedDataMap.get(countyId)[2] = (parseFloat(combinedDataMap.get(countyId)[2]) + value).toString();
+                    } else {
+                        combinedDataMap.set(countyId, [...row]);
+                    }
+                });
+            });
+
+            const combinedDataArray = Array.from(combinedDataMap.values());
+            setPopulationData(combinedDataArray);
+
+            const values = combinedDataArray.map(d => +d[2]);
+            let highQuantile;
+            if (countOrPercentage == 'Count') {
+                highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95) / 20) * 20;
+                setSliderSettings(prev => ({
+                    ...prev,
+                    max: getRoundedSliderSettings(highQuantile, 20, 250).max,
+                    step: getRoundedSliderSettings(highQuantile, 20, 250).step
+                }))
+            }
+            else {
+                highQuantile = Math.ceil(d3.quantile(values.sort((a, b) => a - b), 0.95));
+                setSliderSettings(prev => ({
+                    ...prev,
+                    max: getRoundedSliderSettings(highQuantile, 20, 0.5).max,
+                    step: getRoundedSliderSettings(highQuantile, 20, 0.5).step
+                }))
+            }
+
+            let roundMatrix;
+            if (countOrPercentage == 'Count') {
+                roundMatrix = [1, 100, 1000, 2500, 5000, 10000];
+            }
+            else {
+                roundMatrix = [1, 0.1, 0.01];
+            }
+            // use the largest roundValue that is sufficiently balanced (score < 1000)
+            let optimalVal = -1;
+            let optimalScore = -1;
+            roundMatrix.forEach(roundVal => {
+                const newCutoffs = getCutoffPoints(combinedDataArray, roundVal);
+                if (countOrPercentage == 'Percentage' && newCutoffs[1] == 100 && newCutoffs[1] == newCutoffs[2] && newCutoffs[2] == newCutoffs[3] && newCutoffs[3] == newCutoffs[4]) {
+                    setCountOrPercentage('Count')
+                }
+                const newScore = getCountyDistribution(combinedDataArray, newCutoffs);
+                if (optimalVal == -1 || newScore < 1000 || newScore < optimalScore) { // if score is uninit, take the score. or, take the highest roundval with reasonable score
+                    optimalVal = roundVal;
+                    optimalScore = newScore;
+                }
+            })
+            const newCutoffs = getCutoffPoints(combinedDataArray, optimalVal);
+            setCutoffs(newCutoffs);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    // render map initially and subsequently update when API URLs are changed or viewing mode is changed.
+    useEffect(() => {
+        fetchGeographyData();
+        fetchPopulationData();
     }, [populationURLs, state.viewingMode]);
 
     function getRoundedSliderSettings(maxValue, numSteps, base) {
@@ -447,17 +448,34 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         setPath(() => pathGenerator);
     }, [countyData, width, height]);
 
+    useEffect(() => {
+        console.log(countyData);
+        console.log(populationData);
+        console.log(geographyMode)
+    }, [countyData])
+
     return (
         <div className='map-container'>
             <ButtonGroup orientation="vertical" aria-label="Vertical button group" className="zoom-buttons">
                 {buttons}
             </ButtonGroup>
+            <VerticalToggleButtons setGeographyMode={setGeographyMode} queryVars={queryVars} />
             <svg ref={svgRef} id="canvas" width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
                 <g transform={`translate(${translateX}, ${translateY}) scale(${scale})`}>
                     {countyData.map((county, index) => {
                         const id = county.id.toString();
                         const countyItem = populationData.find(item => {
-                            let fipsCode = item[1].slice(-5);
+                            // console.log(item);
+                            //TODO: this piece of shit is acting up.
+                            // wghen i hard code either -2 or -5, it works for the given mode. when i try this dynamic segment, it works for neither basically
+                            let fipsCode
+                            if (geographyMode === 'State') {
+                                fipsCode = item[1].slice(-2);
+                            }
+                            else if (geographyMode === 'County') {
+                                fipsCode = item[1].slice(-5);
+                            }
+                            // console.log(fipsCode);
                             // if (fipsCode.startsWith('0')) fipsCode = fipsCode.substring(1);
                             return fipsCode === id;
                         });
