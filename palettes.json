@@ -1,0 +1,52 @@
+[
+    {
+        "id": "palette1",
+        "name": "Cool Blue",
+        "colors": [
+            "#77E4C8",
+            "#36C2CE",
+            "#478CCF",
+            "#4535C1"
+        ]
+    },
+    {
+        "id": "palette2",
+        "name": "Green",
+        "colors": [
+            "#E1EEBC",
+            "#90C67C",
+            "#67AE6E",
+            "#328E6E"
+        ]
+    },
+    {
+        "id": "palette3",
+        "name": "Lilac",
+        "colors": [
+            "#f2f0f7",
+            "#cbc9e2",
+            "#9e9ac8",
+            "#6a51a3"
+        ]
+    },
+    {
+        "id": "palette4",
+        "name": "Rose",
+        "colors": [
+            "#fee5d9",
+            "#fcae91",
+            "#fb6a4a",
+            "#cb181d"
+        ]
+    },
+    {
+        "id": "palette5",
+        "name": "Noir",
+        "colors": [
+            "#f7f7f7",
+            "#cccccc",
+            "#969696",
+            "#525252"
+        ]
+    }
+]

@@ -1,0 +1,7 @@
+.env
+src/scripts/clean.py
+src/scripts/bad_counties.json
+
+node_modules
+node_modules/
+nmode_modules/
