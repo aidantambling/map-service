@@ -26,8 +26,10 @@
     "react": "^18.2.0",
     "react-color-palette": "^7.2.2",
     "react-dom": "^18.2.0",
+    "react-icons": "^5.5.0",
     "react-multi-carousel": "^2.8.4",
     "react-multilevel-dropdown": "^4.0.0",
+    "topojson": "^3.0.2",
     "topojson-client": "^3.1.0"
   },
   "devDependencies": {

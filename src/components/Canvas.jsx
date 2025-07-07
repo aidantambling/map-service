@@ -1,22 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import * as d3 from 'd3';
 import { ButtonGroup } from '@mui/material';
 import * as topojson from 'topojson-client';
 import './canvas.scss';
 import { geoPath, geoAlbersUsa } from 'd3-geo';
 import VerticalToggleButtons from './VerticalToggleButtons';
+import { UIContext } from '../contexts/UIContext';
+import { Button } from '@mui/base/Button';
 
-const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderSettings, state, countOrPercentage, setCountOrPercentage, setSliderSettings, selectedCounty, setSelectedCounty, setDataTitle, selectedPalette, geographyMode, setGeographyMode, queryVars }) => {
+const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderSettings, countOrPercentage, setCountOrPercentage, setSliderSettings, selectedCounty, setSelectedCounty, setDataTitle, queryVars }) => {
     const [countyData, setCountyData] = useState([]);
     const [populationData, setPopulationData] = useState([]);
     const [cutoffs, setCutoffs] = useState([]);
 
     const [colorPalette, setColorPalette] = useState([])
 
+    const { viewingMode, comparisonMode, geographyMode, selectedPalette, activeState, uiDispatch } = useContext(UIContext);
+
     const svgRef = useRef();
     const zoomRef = useRef();
 
-    // const countyURL = 'https://cdn.freecodecamp.org/testable-projects-fcc/data/choropleth_map/counties.json';
 
     const zoomBehavior = d3.zoom()
         .scaleExtent([0.9, 8])
@@ -30,35 +33,97 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     zoomRef.current = zoomBehavior;
 
     const fetchGeographyData = async () => {
-        console.log('fetching geography data');
-        try {
-            // use d3 and topojson to get the county/state objects
-            const countyResponse = await d3.json(`${geographyMode}.json`);
-            let counties;
-            if (geographyMode === 'State') {
-                console.log('state approach');
-                counties = topojson.feature(countyResponse, countyResponse.objects.states).features;
+        const retrieveData = async () => {
+            try {
+                // use d3 and topojson to get the county/state objects
+                if (geographyMode === 'CountySubdivision' && activeState) {
+                    const countyResponse = await d3.json(`maps/county_subdivisions/${activeState}.topo.json`);
+                    const objectKey = `tl_2023_${activeState}_cousub`
+
+                    const preliminaryCounties = topojson.feature(countyResponse, countyResponse.objects[objectKey]).features;
+                    return preliminaryCounties.map(feature => ({
+                        ...feature,
+                        id: feature.properties.GEOID
+                    }));
+                }
+                if (geographyMode === 'Place' && activeState) {
+                    const countyResponse = await d3.json(`maps/places/${activeState}.topo.json`);
+                    console.log(countyResponse);
+                    const objectKey = `tl_2022_${activeState}_place`
+
+                    const preliminaryCounties = topojson.feature(countyResponse, countyResponse.objects[objectKey]).features;
+                    return preliminaryCounties.map(feature => ({
+                        ...feature,
+                        id: feature.properties.GEOID
+                    }));
+                }
+                const countyResponse = await d3.json(`${geographyMode}.json`);
+                console.log(countyResponse);
+                console.log(geographyMode);
+                let counties;
+
+                if (geographyMode === 'US') {
+                    return topojson.feature(countyResponse, countyResponse.objects.nation).features;
+                }
+                else if (geographyMode === 'State') {
+                    return topojson.feature(countyResponse, countyResponse.objects.states).features;
+                }
+                else if (geographyMode === 'Region') {
+                    const preliminaryCounties = topojson.feature(countyResponse, countyResponse.objects.regions).features;
+                    return preliminaryCounties.map(feature => ({
+                        ...feature,
+                        id: feature.properties.REGION
+                    }));
+
+                }
+                else if (geographyMode === 'Division') {
+                    const preliminaryCounties = topojson.feature(countyResponse, countyResponse.objects.divisions).features;
+                    return preliminaryCounties.map(feature => ({
+                        ...feature,
+                        id: feature.properties.DIVISION
+                    }));
+                }
+                else if (geographyMode === 'County') {
+                    return topojson.feature(countyResponse, countyResponse.objects.merged).features;
+                }
+                else if ((geographyMode === 'CountySubdivision' || geographyMode === 'Place') && !activeState) {
+                    return topojson.feature(countyResponse, countyResponse.objects.states).features;
+                }
+                else if (geographyMode === 'AIANNH') {
+                    const preliminaryCounties = topojson.feature(countyResponse, countyResponse.objects.tl_2022_us_aiannh).features;
+                    return preliminaryCounties.map(feature => ({
+                        ...feature,
+                        id: feature.properties.GEOID
+                    }));
+                }
+
+                return counties
+            } catch (error) {
+                console.error('Error fetching data:', error);
             }
-            else if (geographyMode === 'County') {
-                console.log('county approach');
-                counties = topojson.feature(countyResponse, countyResponse.objects.merged).features;
-            }
-            // use d3 and topojson to get the county objects
-            setCountyData(counties);
-        } catch (error) {
-            console.error('Error fetching data:', error);
         }
+
+        const data = await retrieveData();
+        console.log('Geography data retrieved: ', data);
+        setCountyData(data);
     }
+
+    useEffect(() => {
+        console.log(populationData);
+        console.log(countyData);
+    }, [populationData, countyData])
 
     const fetchPopulationData = async () => {
         console.log('fetching population data')
         try {
             // send API query for default url (total population) and set data accordingly
             // for each of the URLs, query the API then sum each county's corresponding values
+            console.log(populationURLs)
             const fetchPromises = populationURLs.map(url => {
                 return d3.json(url);
             });
             const responses = await Promise.all(fetchPromises);
+            console.log('RESPONSES', responses)
 
             responses.forEach((response, index) => {
                 if (!response || !Array.isArray(response)) {
@@ -136,7 +201,12 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     useEffect(() => {
         fetchGeographyData();
         fetchPopulationData();
-    }, [populationURLs, state.viewingMode]);
+        console.log(geographyMode);
+    }, [populationURLs, viewingMode]);
+
+    useEffect(() => {
+        fetchGeographyData();
+    }, [activeState])
 
     function getRoundedSliderSettings(maxValue, numSteps, base) {
         const roundedMax = Math.ceil(maxValue / base) * base;
@@ -171,40 +241,41 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
         if (viewingMode === 'Quartile') {
             // attempt to simplify the quartiles if redundancy is present
+            console.log(cutoffs);
             const [min, q1, q2, q3, max] = cutoffs;
 
             if (q1 === q2 && q2 === q3) {
                 // Case 1: q1 = q2 = q3
                 legend = [
-                    { color: selectedPalette[0], label: q1 === 0 ? '0' : `Less than ${q1?.toLocaleString()}` },
-                    { color: selectedPalette[3], label: `Greater than ${q1?.toLocaleString()}` }
+                    { color: selectedPalette.colors[0], label: q1 === 0 ? '0' : `Less than ${q1?.toLocaleString()}` },
+                    { color: selectedPalette.colors[3], label: `Greater than ${q1?.toLocaleString()}` }
                 ];
-                setColorPalette([selectedPalette[0], selectedPalette[3]])
+                setColorPalette([selectedPalette.colors[0], selectedPalette.colors[3]])
             } else if (q1 === q2) {
                 // Case 2a: q1 = q2
                 legend = [
-                    { color: selectedPalette[0], label: q1 === 0 ? '0' : `Less than ${q1?.toLocaleString()}` },
-                    { color: selectedPalette[1], label: `${q1?.toLocaleString()} to ${q3?.toLocaleString()}` },
-                    { color: selectedPalette[3], label: `Greater than ${q3?.toLocaleString()}` }
+                    { color: selectedPalette.colors[0], label: q1 === 0 ? '0' : `Less than ${q1?.toLocaleString()}` },
+                    { color: selectedPalette.colors[1], label: `${q1?.toLocaleString()} to ${q3?.toLocaleString()}` },
+                    { color: selectedPalette.colors[3], label: `Greater than ${q3?.toLocaleString()}` }
                 ];
-                setColorPalette([selectedPalette[0], selectedPalette[1], selectedPalette[3]])
+                setColorPalette([selectedPalette.colors[0], selectedPalette.colors[1], selectedPalette.colors[3]])
             } else if (q2 === q3) {
                 // Case 2b: q2 = q3
                 legend = [
-                    { color: selectedPalette[0], label: q1 === 0 ? '0' : `Less than ${q1?.toLocaleString()}` },
-                    { color: selectedPalette[1], label: `${q1?.toLocaleString()} to ${q2?.toLocaleString()}` },
-                    { color: selectedPalette[3], label: `Greater than ${q2?.toLocaleString()}` }
+                    { color: selectedPalette.colors[0], label: q1 === 0 ? '0' : `Less than ${q1?.toLocaleString()}` },
+                    { color: selectedPalette.colors[1], label: `${q1?.toLocaleString()} to ${q2?.toLocaleString()}` },
+                    { color: selectedPalette.colors[3], label: `Greater than ${q2?.toLocaleString()}` }
                 ];
-                setColorPalette([selectedPalette[0], selectedPalette[1], selectedPalette[3]])
+                setColorPalette([selectedPalette.colors[0], selectedPalette.colors[1], selectedPalette.colors[3]])
             } else {
                 // Case 3: All unique
                 legend = [
-                    { color: selectedPalette[0], label: q1 === 0 ? '0' : `Less than ${q1?.toLocaleString()}` },
-                    { color: selectedPalette[1], label: `${q1?.toLocaleString()} to ${q2?.toLocaleString()}` },
-                    { color: selectedPalette[2], label: `${q2?.toLocaleString()} to ${q3?.toLocaleString()}` },
-                    { color: selectedPalette[3], label: `Greater than ${q3?.toLocaleString()}` }
+                    { color: selectedPalette.colors[0], label: q1 === 0 ? '0' : `Less than ${q1?.toLocaleString()}` },
+                    { color: selectedPalette.colors[1], label: `${q1?.toLocaleString()} to ${q2?.toLocaleString()}` },
+                    { color: selectedPalette.colors[2], label: `${q2?.toLocaleString()} to ${q3?.toLocaleString()}` },
+                    { color: selectedPalette.colors[3], label: `Greater than ${q3?.toLocaleString()}` }
                 ];
-                setColorPalette([selectedPalette[0], selectedPalette[1], selectedPalette[2], selectedPalette[3]])
+                setColorPalette([selectedPalette.colors[0], selectedPalette.colors[1], selectedPalette.colors[2], selectedPalette.colors[3]])
             }
 
             legend.push({
@@ -219,13 +290,13 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
         if (viewingMode === 'Slider') {
             // if viewing in the over-under format, legend should reflect whether a county is above/below the slider value
-            if (state.comparisonMode === 'overUnder') {
+            if (comparisonMode === 'overUnder') {
                 aboveLabel = `Above ${sliderSettings.val.toLocaleString()}`;
                 belowLabel = `Below ${sliderSettings.val.toLocaleString()}`;
             }
 
             // if viewing in the range format, legend should reflect whether a county is inside/outside the range
-            if (state.comparisonMode === 'viewCompRange') {
+            if (comparisonMode === 'Range') {
                 aboveLabel = `Inside ${sliderSettings.range[0]} to ${sliderSettings.range[1]}`;
                 belowLabel = `Outside ${sliderSettings.range[0]} to ${sliderSettings.range[1]}`;
             }
@@ -239,13 +310,13 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
             }
 
             // if viewing in the over-under format, legend should reflect whether a county is above/below the selected county
-            if (state.comparisonMode === 'overUnder') {
+            if (comparisonMode === 'overUnder') {
                 aboveLabel = `Above ${selectedCounty.stat.toLocaleString()}`;
                 belowLabel = `Below ${selectedCounty.stat.toLocaleString()}`;
             }
 
             // if viewing in the range format, legend should reflect whether a county is inside/outside the range
-            if (state.comparisonMode === 'viewCompRange') {
+            if (comparisonMode === 'Range') {
                 aboveLabel = `Within ${sliderSettings.val} of ${selectedCounty.stat.toLocaleString()}`;
                 belowLabel = `Outside ${sliderSettings.val} of ${selectedCounty.stat.toLocaleString()}`;
             }
@@ -254,11 +325,11 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         // capitalize on common structure of slider/comp and set the legend in one block
         legend = [
             {
-                color: selectedPalette[0],
+                color: selectedPalette.colors[0],
                 label: aboveLabel
             },
             {
-                color: selectedPalette[3],
+                color: selectedPalette.colors[3],
                 label: belowLabel
             },
             {
@@ -273,28 +344,28 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
     // update the legend whenever we adjust the slider, cutoff points, or viewing mode
     useEffect(() => {
-        if (selectedPalette) updateLegend(cutoffs, state.viewingMode);
-    }, [sliderSettings, cutoffs, state.viewingMode, selectedCounty, selectedPalette])
+        if (selectedPalette) updateLegend(cutoffs, viewingMode);
+    }, [sliderSettings, cutoffs, viewingMode, selectedCounty, selectedPalette])
 
     // given a county, find its color based on the threshold and its value
     const getColor = (countyVal, countyID, sliderVal, val, sliderRange, viewingMode) => {
         if (countyVal === null) return 'black';
         if (viewingMode === "Slider") {
-            if (state.comparisonMode === 'overUnder') {
-                return countyVal >= sliderVal ? selectedPalette[3] : selectedPalette[0];
+            if (comparisonMode === 'overUnder') {
+                return countyVal >= sliderVal ? selectedPalette.colors[3] : selectedPalette.colors[0];
             }
-            if (state.comparisonMode === 'viewCompRange') {
-                return ((countyVal >= sliderRange[0]) && (countyVal <= sliderRange[1])) ? selectedPalette[0] : selectedPalette[3];
+            if (comparisonMode === 'Range') {
+                return ((countyVal >= sliderRange[0]) && (countyVal <= sliderRange[1])) ? selectedPalette.colors[0] : selectedPalette.colors[3];
             }
         }
         if (viewingMode === 'Inspect') {
-            if (state.comparisonMode === 'overUnder') {
+            if (comparisonMode === 'overUnder') {
                 if (countyID === selectedCounty.id) return 'yellow';
-                return countyVal >= selectedCounty.stat ? selectedPalette[3] : selectedPalette[0];
+                return countyVal >= selectedCounty.stat ? selectedPalette.colors[3] : selectedPalette.colors[0];
             }
-            if (state.comparisonMode === 'viewCompRange') {
+            if (comparisonMode === 'Range') {
                 if (countyID === selectedCounty.id) return 'yellow';
-                return (Math.abs(countyVal - selectedCounty.stat) <= val) ? selectedPalette[3] : selectedPalette[0];
+                return (Math.abs(countyVal - selectedCounty.stat) <= val) ? selectedPalette.colors[3] : selectedPalette.colors[0];
             }
         }
 
@@ -313,7 +384,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
     // display county data (name, value) on mouse-over
     const handleMouseOver = (countyName, stat) => {
-        if (state.viewingMode === 'Inspect') return; // compare mode - forget mouseover
+        if (viewingMode === 'Inspect') return; // compare mode - forget mouseover
         if (tooltipCountyRef.current && tooltipStatRef.current) {
             tooltipCountyRef.current.textContent = countyName;
             tooltipStatRef.current.textContent = stat;
@@ -329,7 +400,15 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
     // if we're in compare mode, handle selection of county
     const handleClick = (countyName, countyID, stat) => {
-        if (state.viewingMode === 'Inspect') {
+        if ((geographyMode === 'CountySubdivision' || geographyMode === 'Place') && !activeState) {
+            console.log('SETTING ACTIVE STATE TO: ', countyID.slice(9));
+            // setActiveState(true);
+            uiDispatch({
+                type: 'SET_ACTIVE_STATE',
+                activeState: countyID.slice(9),
+            })
+        }
+        if (viewingMode === 'Inspect') {
             let wikiLink = `https://en.wikipedia.org/wiki/${countyName.replace(/ /g, "_")}`;
             const obj = {
                 countyName: countyName,
@@ -414,8 +493,6 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         d3.select(svgRef.current).transition().call(zoomRef.current.transform, d3.zoomIdentity);
     };
 
-
-
     const [path, setPath] = useState(null);
     const [translateX, setTranslateX] = useState(0);
     const [translateY, setTranslateY] = useState(0);
@@ -448,35 +525,56 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         setPath(() => pathGenerator);
     }, [countyData, width, height]);
 
-    useEffect(() => {
-        console.log(countyData);
-        console.log(populationData);
-        console.log(geographyMode)
-    }, [countyData])
-
     return (
         <div className='map-container'>
             <ButtonGroup orientation="vertical" aria-label="Vertical button group" className="zoom-buttons">
                 {buttons}
             </ButtonGroup>
-            <VerticalToggleButtons setGeographyMode={setGeographyMode} queryVars={queryVars} />
+            {activeState ?
+                <Button onClick={() => {
+                    uiDispatch({
+                        type: 'SET_ACTIVE_STATE',
+                        activeState: null,
+                    })
+                }}>Back</Button>
+                :
+                <></>
+            }
+            <VerticalToggleButtons queryVars={queryVars} />
             <svg ref={svgRef} id="canvas" width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
                 <g transform={`translate(${translateX}, ${translateY}) scale(${scale})`}>
                     {countyData.map((county, index) => {
                         const id = county.id.toString();
                         const countyItem = populationData.find(item => {
-                            // console.log(item);
-                            //TODO: this piece of shit is acting up.
-                            // wghen i hard code either -2 or -5, it works for the given mode. when i try this dynamic segment, it works for neither basically
                             let fipsCode
-                            if (geographyMode === 'State') {
+                            if (geographyMode === 'US') {
                                 fipsCode = item[1].slice(-2);
+                            }
+                            else if ((geographyMode === 'CountySubdivision' || geographyMode === 'Place') && !activeState) {
+                                fipsCode = item[1].slice(-2);
+                            }
+                            else if (geographyMode === 'AIANNH') {
+                                fipsCode = item[1].slice(-4) + 'R'
+                            }
+                            else if (geographyMode === 'CountySubdivision') {
+                                fipsCode = item[1].slice(-10);
+                                // console.log(fipsCode);
+                                // console.log(id);
+                            }
+                            else if (geographyMode === 'Place') {
+                                fipsCode = item[1].slice(-7);
+                                // console.log(fipsCode);
+                                // console.log(id);
                             }
                             else if (geographyMode === 'County') {
                                 fipsCode = item[1].slice(-5);
                             }
-                            // console.log(fipsCode);
-                            // if (fipsCode.startsWith('0')) fipsCode = fipsCode.substring(1);
+                            else if (geographyMode === 'Region') {
+                                fipsCode = item[3];
+                            }
+                            else if (geographyMode === 'Division') {
+                                fipsCode = item[3];
+                            }
                             return fipsCode === id;
                         });
 
@@ -488,7 +586,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                                 key={index}
                                 d={path(county)}
                                 className="county"
-                                fill={getColor(countyVal, countyID, sliderSettings.val, sliderSettings.val, sliderSettings.range, state.viewingMode)}
+                                fill={getColor(countyVal, countyID, sliderSettings.val, sliderSettings.val, sliderSettings.range, viewingMode)}
                                 onMouseOver={() => { handleMouseOver(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[2] : 'Unknown') }}
                                 onMouseOut={handleMouseOut}
                                 onClick={() => handleClick(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[1] : 'Unknown', countyItem ? countyItem[2] : 'Unknown')}

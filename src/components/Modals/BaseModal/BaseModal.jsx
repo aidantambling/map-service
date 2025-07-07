@@ -47,6 +47,7 @@ Fade.propTypes = {
 };
 
 const BaseModal = React.forwardRef(function BaseModal({ dataTitle, dataSubtitle, open, handleOpen, handleClose, children, ...props }, ref) {
+
     // handle opening/closing of modal(s)
     return (
         <div {...props} ref={ref} className='dataset-modal'>

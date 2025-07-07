@@ -20,16 +20,32 @@ body.active-modal {
         .dm-button-title {
             display: block;
             color: white;
-            font-size: 20px;
+            font-size: 16px;
             height: 25%;
             margin: 0px;
+
+            @media (min-width: 768px) {
+                font-size: 14px;
+            }
+
+            @media (min-width: 1024px) {
+                font-size: 16px;
+            }
         }
 
         .dm-button-sub {
             color: rgb(255, 255, 255, 0.4);
-            font-size: 14px;
+            font-size: 12px;
             height: 25%;
             margin: 0px;
+
+            @media (min-width: 768px) {
+                font-size: 10px;
+            }
+
+            @media (min-width: 1024px) {
+                font-size: 12px;
+            }
         }
     }
 }

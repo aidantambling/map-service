@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Box from '@mui/material/Box';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { useTreeViewApiRef } from '@mui/x-tree-view/hooks';
@@ -14,13 +14,20 @@ const TreeView = ({ concepts, setQueryVars }) => {
     });
 
     // clear the selected concepts when user selects a new superConcept
+    const [hasInitialized, setHasInitialized] = useState(false);
+
     useEffect(() => {
-        console.log('clearing queryvars')
+        if (!hasInitialized) {
+            setHasInitialized(true);
+            return; // skip clearing on first run
+        }
+
+        console.log('clearing queryVars due to concept change');
         setQueryVars(prev => ({
             ...prev,
             current: []
         }));
-    }, [concepts])
+    }, [concepts]);
 
     // handle selection/deselection of concepts by user
     const handleItemSelectionToggle = (event, ids) => {

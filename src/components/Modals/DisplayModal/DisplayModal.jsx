@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import PropTypes from 'prop-types';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
@@ -8,6 +8,7 @@ import 'react-multi-carousel/lib/styles.css';
 import "react-color-palette/css";
 import BaseModal from "../BaseModal/BaseModal";
 import "./DisplayModal.scss";
+import { UIContext } from "../../../contexts/UIContext";
 
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -49,10 +50,11 @@ function a11yProps(index) {
     };
 }
 
-const VerticalTabs = ({ dispatch }) => {
+const VerticalTabs = ({ }) => {
     const [value, setValue] = React.useState(0);
     const [sliderTab, setSliderTab] = useState(0);
     const [inspectTab, setInspectTab] = useState(0);
+    const { uiDispatch } = useContext(UIContext);
 
     const handleChange = (event, newValue) => {
         setValue(newValue);
@@ -66,9 +68,12 @@ const VerticalTabs = ({ dispatch }) => {
         setInspectTab(newValue);
     }
 
-    const changeDisplayMode = (newMode) => {
-        console.log(newMode);
-        dispatch({ type: newMode })
+    const changeDisplayMode = (newMode, comparisonMode) => {
+        uiDispatch({
+            type: 'SET_VIEWING_MODE',
+            viewingMode: newMode,
+            comparisonMode: comparisonMode
+        })
     }
 
     return (
@@ -104,7 +109,7 @@ const VerticalTabs = ({ dispatch }) => {
                     <h2>Group By Quartiles</h2>
                     <p>Group counties into 4 equal parts based on distribution.</p>
                     <img src='quartile.gif' />
-                    <button onClick={() => changeDisplayMode('viewQuartile')}>Select</button>
+                    <button onClick={() => changeDisplayMode('Quartile')}>Select</button>
                 </>
             </TabPanel>
             <TabPanel className="tab-panel" value={value} index={1}>
@@ -135,7 +140,7 @@ const VerticalTabs = ({ dispatch }) => {
                         <h2>Set Value Threshold - Above/Below Value</h2>
                         <p>Show which counties are above or below a chosen number.</p>
                         <img src='quartile.gif' />
-                        <button onClick={() => changeDisplayMode('viewSliderOverUnder')}>Select</button>
+                        <button onClick={() => changeDisplayMode('Slider', 'overUnder')}>Select</button>
                     </>
                 </TabPanel>
                 <TabPanel value={sliderTab} index={1}>
@@ -143,7 +148,7 @@ const VerticalTabs = ({ dispatch }) => {
                         <h2>Set Value Threshold - Within Value Range</h2>
                         <p>Highlight counties within a specified numeric range.</p>
                         <img src='quartile.gif' />
-                        <button onClick={() => changeDisplayMode('viewSliderRange')}>Select</button>
+                        <button onClick={() => changeDisplayMode('Slider', 'Range')}>Select</button>
                     </>
                 </TabPanel>
             </TabPanel>
@@ -175,7 +180,7 @@ const VerticalTabs = ({ dispatch }) => {
                         <h2>Compare to County - Higher/Lower than County</h2>
                         <p>Compare counties to a selected one's value.</p>
                         <img src='quartile.gif' />
-                        <button onClick={() => changeDisplayMode('viewInspectOverUnder')}>Select</button>
+                        <button onClick={() => changeDisplayMode('Inspect', 'overUnder')}>Select</button>
                     </>
                 </TabPanel>
                 <TabPanel value={inspectTab} index={1}>
@@ -183,7 +188,7 @@ const VerticalTabs = ({ dispatch }) => {
                         <h2>Compare to County - Within County's Range</h2>
                         <p>Highlight counties within a specified numeric range of a selected county.</p>
                         <img src='quartile.gif' />
-                        <button onClick={() => changeDisplayMode('viewInspectRange')}>Select</button>
+                        <button onClick={() => changeDisplayMode('Inspect', 'Range')}>Select</button>
                     </>
                 </TabPanel>
             </TabPanel>
@@ -191,13 +196,14 @@ const VerticalTabs = ({ dispatch }) => {
     );
 }
 
-const DisplayModal = ({ state, dispatch }) => {
+const DisplayModal = ({ }) => {
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
+    const { viewingMode } = useContext(UIContext);
 
     return (
-        <BaseModal dataTitle={"Display"} dataSubtitle={state.viewingMode} open={open} handleOpen={handleOpen} handleClose={handleClose}>
+        <BaseModal dataTitle={"Display"} dataSubtitle={viewingMode} open={open} handleOpen={handleOpen} handleClose={handleClose}>
             <div className='modal-wrapper'>
                 <div className="modal-container">
                     <div className="modal-header">
@@ -207,7 +213,7 @@ const DisplayModal = ({ state, dispatch }) => {
                         <img src="x-button.png" alt="Close" />
                     </button>
                     <div className="modal-body">
-                        <VerticalTabs dispatch={dispatch} />
+                        <VerticalTabs />
                     </div>
                 </div>
             </div>

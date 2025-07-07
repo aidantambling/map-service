@@ -1,8 +1,16 @@
 import { motion } from "motion/react"
+import { useState } from "react";
 import RangeSlider from './RangeSlider';
 import TextField from '@mui/material/TextField';
 
-const RangeUI = ({ lowRangeRef, highRangeRef, sliderSettings, setSliderSettings, basePosition, setBasePosition, secondPosition, setSecondPosition }) => {
+const RangeUI = ({ lowRangeRef, highRangeRef, sliderSettings, setSliderSettings }) => {
+    const [basePosition, setBasePosition] = useState({
+        x: 0, y: 0,
+    })
+    const [secondPosition, setSecondPosition] = useState({
+        x: 500, y: 0,
+    })
+
     const transitionToText = () => {
         setBasePosition({ x: 500, y: 0 });
         setSecondPosition({ x: 0, y: 0 });

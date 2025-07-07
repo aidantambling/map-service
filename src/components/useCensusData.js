@@ -2,8 +2,8 @@ import { filter } from 'd3';
 import { useState, useEffect } from 'react';
 const api_key = import.meta.env.VITE_CENSUS_KEY
 
-export const paramToURL = (param, level) => {
-    return `https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,` + param + `&for=${level}:*&key=${api_key}`
+export const paramToURL = (param, level, state = '*') => {
+    return `https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,` + param + `&for=${level}:${state}&key=${api_key}`
 }
 // terminology:
 

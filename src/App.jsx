@@ -1,4 +1,4 @@
-import { useState, useReducer, useEffect, useRef } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import Canvas from './components/Canvas';
 import { getVariablesFromConcept, findConceptsFromBase, fetchConceptGroups, paramToURL } from './components/useCensusData';
 import DatasetModal from './components/Modals/DatasetModal/DatasetModal';
@@ -10,35 +10,15 @@ import SpinnerLoader from './components/SpinnerLoader/SpinnerLoader';
 import './App.scss';
 import OverUnderUI from './components/RangeSlider/OverUnderUI';
 import RangeUI from './components/RangeSlider/RangeUI';
-
-// reducer to allow swapping between view mode
-const reducer = (state, action) => {
-    switch (action.type) {
-        case 'viewQuartile':
-            return { viewingMode: 'Quartile' };
-        case 'viewComparison':
-            return { viewingMode: 'Comparison' };
-        case 'viewSliderOverUnder':
-            return { viewingMode: 'Slider', comparisonMode: 'overUnder' };
-        case 'viewSliderRange':
-            return { viewingMode: 'Slider', comparisonMode: 'viewCompRange' };
-        case 'viewInspectOverUnder':
-            return { viewingMode: 'Inspect', comparisonMode: 'overUnder' };
-        case 'viewInspectRange':
-            return { viewingMode: 'Inspect', comparisonMode: 'viewCompRange' };
-        default:
-            throw new Error();
-    }
-}
+import { UIContext } from './contexts/UIContext';
 
 const App = () => {
-    const [state, dispatch] = useReducer(reducer, { viewingMode: 'Quartile', comparisonMode: 'over/under' });
-    const [geographyMode, setGeographyMode] = useState("County");
+    const { viewingMode, comparisonMode, geographyMode, selectedPalette, setSelectedPalette, activeState } = useContext(UIContext);
 
     // manage API access via url(s)
     const api_key = import.meta.env.VITE_CENSUS_KEY
     const [populationURLs, setPopulationURLs] = useState([
-        `https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,B01003_001E&for=county:*&key=${api_key}`
+        `https://api.census.gov/data/2022/acs/acs5?get=NAME,GEO_ID,B01003_001E&for=state:*&key=${api_key}`
     ]);
 
     // tooltip refs - passed to Canvas.jsx for value assignment based on mouse-over
@@ -73,16 +53,6 @@ const App = () => {
 
     // color-related state devices
     const [palettes, setPalettes] = useState(null);
-    const [selectedPalette, setSelectedPalette] = useState({
-        "id": "palette1",
-        "name": "Cool Blue",
-        "colors": [
-            "#77E4C8",
-            "#36C2CE",
-            "#478CCF",
-            "#4535C1"
-        ]
-    });
 
     // API access
     const [nameGroups, setNameGroups] = useState([]);
@@ -119,8 +89,8 @@ const App = () => {
         return (
             <ul>
                 {legendData.map((item, index) => (
-                    <li key={index} id="legend-element">
-                        <span style={{ backgroundColor: item.color, width: '2rem', height: '2rem', marginRight: '10%', display: 'flex' }}></span>
+                    <li key={index} className="legend-element" id="legend-element">
+                        <span style={{ backgroundColor: item.color, width: '1.5rem', height: '1.5rem', marginRight: '0.5rem', flexShrink: 0, }}></span>
                         {item.label}
                     </li>
                 ))}
@@ -133,7 +103,7 @@ const App = () => {
         return (
             <>
                 {renderQuartileData()}
-                {state.comparisonMode === 'overUnder' ? (
+                {comparisonMode === 'overUnder' ? (
                     <OverUnderUI
                         overUnderRef={overUnderRef}
                         sliderSettings={sliderSettings}
@@ -166,7 +136,7 @@ const App = () => {
                     }
                 </h5>
                 {renderQuartileData()}
-                {state.comparisonMode === 'viewCompRange' ?
+                {comparisonMode === 'Range' ?
                     <OverUnderUI
                         overUnderRef={inspectRef}
                         sliderSettings={{
@@ -241,9 +211,24 @@ const App = () => {
     // submit a query to the API using user-selected queryVars
     const queryAPI = () => {
         // translate the selected concepts into codes for the API
-        console.log('changing population urls, geomode is: ', geographyMode)
         console.log(queryVars);
-        const popURLs = queryVars.current.map(queryVar => paramToURL(queryVar.group, geographyMode));
+        console.log(activeState);
+        let popURLs;
+        if ((geographyMode === 'CountySubdivision' || geographyMode === 'Place') && !activeState) {
+            popURLs = queryVars.current.map(queryVar => paramToURL(queryVar.group, 'state'));
+        }
+        else if (geographyMode === 'CountySubdivision') {
+            popURLs = queryVars.current.map(queryVar => paramToURL(queryVar.group, `county%20subdivision:*&in=state`, `${activeState}`));
+        }
+        else if (geographyMode === 'Place') {
+            popURLs = queryVars.current.map(queryVar => paramToURL(queryVar.group, `place:*&in=state`, `${activeState}`));
+        }
+        else if (geographyMode === 'AIANNH') {
+            popURLs = queryVars.current.map(queryVar => paramToURL(queryVar.group, `american%20indian%20area/alaska%20native%20area/hawaiian%20home%20land`));
+        }
+        else {
+            popURLs = queryVars.current.map(queryVar => paramToURL(queryVar.group, geographyMode));
+        }
         console.log(popURLs);
         setPopulationURLs(popURLs);
 
@@ -264,7 +249,7 @@ const App = () => {
 
     useEffect(() => {
         queryAPI();
-    }, [geographyMode])
+    }, [geographyMode, activeState])
 
     return (
         <div id="mainContainer">
@@ -277,7 +262,7 @@ const App = () => {
                         <DatasetModal nameGroups={nameGroups} renderConcepts={renderConcepts} dataTitle={dataTitle} setDataTitle={setDataTitle} setTitle={setTitle} />
                     </Tooltip>
                     <ColorModal palettes={palettes} setSelectedPalette={setSelectedPalette} selectedPalette={selectedPalette} />
-                    <DisplayModal state={state} dispatch={dispatch} />
+                    <DisplayModal />
                 </div>
             </div>
             <div className="canvas-container">
@@ -295,47 +280,34 @@ const App = () => {
                             setLegendData={setLegendData}
                             populationURLs={populationURLs}
                             sliderSettings={sliderSettings}
-                            state={state}
                             countOrPercentage={countOrPercentage}
                             setCountOrPercentage={setCountOrPercentage}
                             setSliderSettings={setSliderSettings}
                             selectedCounty={selectedCounty}
                             setSelectedCounty={setSelectedCounty}
                             setDataTitle={setDataTitle}
-                            selectedPalette={selectedPalette.colors}
-                            geographyMode={geographyMode}
-                            setGeographyMode={setGeographyMode}
                             queryVars={queryVars}
                         />
                         <div id="legend-scale">
-                            <h3>{dataTitle}</h3>
-                            <div className='currently-viewing-box'>
-                                <div className='query-vars-box'>
-                                    {queryVars.committed
-                                        .sort((a, b) => {
-                                            if (a.group < b.group) return -1;
-                                            if (a.group > b.group) return 1;
-                                            return 0;
-                                        })
-                                        .map((variable, index) => (
-                                            <div key={index} style={{ color: 'white', display: 'flex', alignItems: 'center' }}>
-                                                <p>{variable.fullpath}</p>
-                                            </div>
-                                        ))}
-
-                                </div>
-                            </div>
-                            {state.viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
-                            {state.viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
-                            {state.viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
+                            <h3>{dataTitle + ' '}
+                                (
+                                {queryVars.committed
+                                    .sort((a, b) => a.group.localeCompare(b.group))
+                                    .map(v => v.fullpath)
+                                    .join(', ')}
+                                )
+                            </h3>
+                            {viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
+                            {viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
+                            {viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
                         </div>
                     </>
                 </div>
             </div>
             <div className="panel-container">
-                <div id="tooltips">
-                    <div class='tooltip' id='tooltip-county' ref={tooltipCountyRef}>Hover over a county</div>
-                    <div class='tooltip' id='tooltip-stat' ref={tooltipStatRef}>to see details!</div>
+                <div className="tooltips" id='tooltips'>
+                    <div className='tooltip' id='tooltip-county' ref={tooltipCountyRef}>Hover over a county</div>
+                    <div className='tooltip' id='tooltip-stat' ref={tooltipStatRef}>to see details!</div>
                 </div>
                 {/* We need to implement the description... */}
                 {/* <div id='description'>{dataDescription}</div> */}

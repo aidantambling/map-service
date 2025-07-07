@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useContext } from 'react';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
@@ -7,6 +8,8 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { styled } from '@mui/material/styles';
 import './VerticalToggleButtons.scss'
 import Tooltip from '@mui/material/Tooltip';
+import { UIContext } from '../contexts/UIContext';
+import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 
 const CustomToggleButton = styled(ToggleButton)(({ theme }) => ({
     color: 'white',
@@ -32,19 +35,46 @@ const CustomToggleButton = styled(ToggleButton)(({ theme }) => ({
 }));
 
 
-const VerticalToggleButtons = ({ setGeographyMode, queryVars }) => {
+const VerticalToggleButtons = ({ queryVars }) => {
+
     const [view, setView] = React.useState('list');
+    const [arrowClicked, setArrowClicked] = React.useState(false);
+    const { uiDispatch } = useContext(UIContext);
 
     const handleChange = (event, nextView) => {
+        console.log(queryVars);
         // only support a change if variable(s) are selected
+
+        if (nextView === 'ViewLess' || nextView === 'ViewMore') {
+            setArrowClicked(!arrowClicked);
+            return;
+        }
+
         if (queryVars.current.length !== 0) {
             if (nextView !== null) {
-                console.log('changing geography mode in VTB')
                 setView(nextView);
-                setGeographyMode(nextView);
+                uiDispatch({
+                    type: 'SET_GEOGRAPHY_MODE',
+                    geographyMode: nextView,
+                })
             }
         }
     };
+
+    const primaryGeographyTypes = ['US', 'State', 'County'].map((geoType) =>
+        <Tooltip title={geoType} placement="right">
+            <CustomToggleButton value={geoType} aria-label={geoType}>
+                <img src={`${geoType}.png`} className='toggle-img' />
+            </CustomToggleButton>
+        </Tooltip>
+    );
+    const secondaryGeographyTypes = ['Region', 'Division', 'CountySubdivision', 'Place', 'AIANNH'].map((geoType) =>
+        <Tooltip title={geoType} placement="right">
+            <CustomToggleButton value={geoType} aria-label={geoType}>
+                <img src={`${geoType}.png`} className='toggle-img' />
+            </CustomToggleButton>
+        </Tooltip>
+    );
 
     return (
         <ToggleButtonGroup
@@ -54,8 +84,9 @@ const VerticalToggleButtons = ({ setGeographyMode, queryVars }) => {
             onChange={handleChange}
             className="toggle-buttons"
         >
-            <Tooltip title="Country" placement="right">
-                <CustomToggleButton value="Country" aria-label="Country">
+            {primaryGeographyTypes}
+            {/* <Tooltip title="US" placement="right">
+                <CustomToggleButton value="US" aria-label="US">
                     <img src="us_outline.png" className='toggle-img' />
                 </CustomToggleButton>
             </Tooltip>
@@ -70,8 +101,28 @@ const VerticalToggleButtons = ({ setGeographyMode, queryVars }) => {
                 <CustomToggleButton value="County" aria-label="County">
                     <img src="cook_outline.png" className='toggle-img' />
                 </CustomToggleButton>
-            </Tooltip>
+            </Tooltip> */}
+
+            {
+                !arrowClicked ?
+                    <Tooltip title="View More" placement="right">
+                        <CustomToggleButton value="ViewMore" aria-label="Region">
+                            <FaArrowDown className='toggle-img' />
+                        </CustomToggleButton>
+                    </Tooltip>
+                    :
+                    <>
+                        {secondaryGeographyTypes}
+                        <Tooltip title="View Less" placement="right">
+                            <CustomToggleButton value="ViewLess" aria-label="Region">
+                                <FaArrowUp className='toggle-img' />
+                            </CustomToggleButton>
+                        </Tooltip>
+                    </>
+            }
         </ToggleButtonGroup>
+
+
     );
 }
 
