@@ -1,16 +1,39 @@
-.toggle-button {
-    background-color: red !important;
+.MuiToggleButtonGroup-root {
+    padding: 0 !important;
 }
 
 .toggle-buttons {
+    // background-color: #2980b9;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+    border-radius: 8px;
 
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
+    font-size: 0.8em !important;
+    padding: 5px 10px;
+
+    @media (min-width: 768px) {
+        font-size: 0.8em !important;
+        padding: 5px 10px;
+    }
+
+    margin: 0;
+    padding: 0;
+
+    // position: absolute;
+    // // top: 20px;
+    // // left: 20px;
+    // z-index: 1000;
+    // display: flex;
+    // flex-direction: column;
+    // justify-content: space-around;
 
     .toggle-img {
         height: 15px;

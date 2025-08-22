@@ -14,14 +14,14 @@ import { FaArrowDown, FaArrowUp } from "react-icons/fa";
 const CustomToggleButton = styled(ToggleButton)(({ theme }) => ({
     color: 'white',
     backgroundColor: '#1976d2', // MUI primary blue
-    border: '1px solid white',
+    // border: '1px solid white',
     borderRadius: '4px',
     transition: 'all 0.2s ease-in-out',
 
     '&.Mui-selected': {
         backgroundColor: '#004ba0 !important', // darker blue for selected
         color: '#fff',
-        border: '2px solid #fff',   // thicker border
+        // border: '2px solid #fff',   // thicker border
         fontWeight: 'bold',
     },
 
@@ -45,7 +45,7 @@ const VerticalToggleButtons = ({ queryVars }) => {
         console.log(queryVars);
         // only support a change if variable(s) are selected
 
-        if (nextView === 'ViewLess' || nextView === 'ViewMore') {
+        if (nextView === 'SelectButton') {
             setArrowClicked(!arrowClicked);
             return;
         }
@@ -58,17 +58,26 @@ const VerticalToggleButtons = ({ queryVars }) => {
                     geographyMode: nextView,
                 })
             }
+            setArrowClicked(false);
         }
     };
 
-    const primaryGeographyTypes = ['US', 'State', 'County'].map((geoType) =>
+    const baseButton = <Tooltip title="Select Geography Type" placement="right">
+        <CustomToggleButton value="SelectButton" aria-label="SelectButton">
+            <img src={`US.png`} className='toggle-img' />
+        </CustomToggleButton>
+    </Tooltip>
+
+    const primaryGeographyTypes = ['US',
+        // 'State', 'County'
+    ].map((geoType) =>
         <Tooltip title={geoType} placement="right">
             <CustomToggleButton value={geoType} aria-label={geoType}>
                 <img src={`${geoType}.png`} className='toggle-img' />
             </CustomToggleButton>
         </Tooltip>
     );
-    const secondaryGeographyTypes = ['Region', 'Division', 'CountySubdivision', 'Place', 'AIANNH'].map((geoType) =>
+    const secondaryGeographyTypes = ['US', 'State', 'County', 'Region', 'Division', 'CountySubdivision', 'Place', 'AIANNH'].map((geoType) =>
         <Tooltip title={geoType} placement="right">
             <CustomToggleButton value={geoType} aria-label={geoType}>
                 <img src={`${geoType}.png`} className='toggle-img' />
@@ -84,32 +93,10 @@ const VerticalToggleButtons = ({ queryVars }) => {
             onChange={handleChange}
             className="toggle-buttons"
         >
-            {primaryGeographyTypes}
-            {/* <Tooltip title="US" placement="right">
-                <CustomToggleButton value="US" aria-label="US">
-                    <img src="us_outline.png" className='toggle-img' />
-                </CustomToggleButton>
-            </Tooltip>
-
-            <Tooltip title="State" placement="right">
-                <CustomToggleButton value="State" aria-label="State">
-                    <img src="texas_outline.png" className='toggle-img' />
-                </CustomToggleButton>
-            </Tooltip>
-
-            <Tooltip title="County" placement="right">
-                <CustomToggleButton value="County" aria-label="County">
-                    <img src="cook_outline.png" className='toggle-img' />
-                </CustomToggleButton>
-            </Tooltip> */}
-
+            {baseButton}
             {
                 !arrowClicked ?
-                    <Tooltip title="View More" placement="right">
-                        <CustomToggleButton value="ViewMore" aria-label="Region">
-                            <FaArrowDown className='toggle-img' />
-                        </CustomToggleButton>
-                    </Tooltip>
+                    <></>
                     :
                     <>
                         {secondaryGeographyTypes}

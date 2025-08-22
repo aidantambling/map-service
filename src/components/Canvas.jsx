@@ -501,8 +501,11 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     const buttons = [
         <button className="zoom-button" onClick={() => zoomIn()}>+</button>,
         <button className="zoom-button" onClick={() => zoomOut()}>-</button>,
-        <button className="zoom-button" onClick={() => resetZoom()}>Reset</button>,
+        <button className="zoom-button" onClick={() => resetZoom()}>o</button>,
     ];
+    const toggleButtons = [
+        <VerticalToggleButtons queryVars={queryVars} />
+    ]
 
     useEffect(() => {
         const projection = geoAlbersUsa()
@@ -527,9 +530,14 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
 
     return (
         <div className='map-container'>
-            <ButtonGroup orientation="vertical" aria-label="Vertical button group" className="zoom-buttons">
-                {buttons}
-            </ButtonGroup>
+            <div className="lazy-name">
+                <ButtonGroup aria-label="Vertical button group" className="zoom-buttons">
+                    {buttons}
+                </ButtonGroup>
+                <ButtonGroup aria-label="Vertical button group" className="zoom-buttons">
+                    {toggleButtons}
+                </ButtonGroup>
+            </div>
             {activeState ?
                 <Button onClick={() => {
                     uiDispatch({
@@ -540,7 +548,7 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 :
                 <></>
             }
-            <VerticalToggleButtons queryVars={queryVars} />
+            {/* <VerticalToggleButtons queryVars={queryVars} /> */}
             <svg ref={svgRef} id="canvas" width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
                 <g transform={`translate(${translateX}, ${translateY}) scale(${scale})`}>
                     {countyData.map((county, index) => {

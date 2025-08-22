@@ -90,7 +90,7 @@ const App = () => {
             <ul>
                 {legendData.map((item, index) => (
                     <li key={index} className="legend-element" id="legend-element">
-                        <span style={{ backgroundColor: item.color, width: '1.5rem', height: '1.5rem', marginRight: '0.5rem', flexShrink: 0, }}></span>
+                        <span className="legend-color-icon" style={{ backgroundColor: item.color, flexShrink: 0, }}></span>
                         {item.label}
                     </li>
                 ))}
@@ -267,41 +267,39 @@ const App = () => {
             </div>
             <div className="canvas-container">
                 <div id="canvas-panel">
-                    <>
-                        <div className={canvasLoading ? 'tempDiv-low' : 'tempDiv-high'}>
-                            {canvasLoading ?
-                                <></>
-                                :
-                                <SpinnerLoader showSpinner={true} source={'spinner2.svg'} />}
-                        </div>
-                        <Canvas
-                            tooltipCountyRef={tooltipCountyRef}
-                            tooltipStatRef={tooltipStatRef}
-                            setLegendData={setLegendData}
-                            populationURLs={populationURLs}
-                            sliderSettings={sliderSettings}
-                            countOrPercentage={countOrPercentage}
-                            setCountOrPercentage={setCountOrPercentage}
-                            setSliderSettings={setSliderSettings}
-                            selectedCounty={selectedCounty}
-                            setSelectedCounty={setSelectedCounty}
-                            setDataTitle={setDataTitle}
-                            queryVars={queryVars}
-                        />
-                        <div id="legend-corner">
-                            <h3>{dataTitle + ' '}
-                                (
-                                {queryVars.committed
-                                    .sort((a, b) => a.group.localeCompare(b.group))
-                                    .map(v => v.fullpath)
-                                    .join(', ')}
-                                )
-                            </h3>
-                            {viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
-                            {viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
-                            {viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
-                        </div>
-                    </>
+                    <div className={canvasLoading ? 'tempDiv-low' : 'tempDiv-high'}>
+                        {canvasLoading ?
+                            <></>
+                            :
+                            <SpinnerLoader showSpinner={true} source={'spinner2.svg'} />}
+                    </div>
+                    <Canvas
+                        tooltipCountyRef={tooltipCountyRef}
+                        tooltipStatRef={tooltipStatRef}
+                        setLegendData={setLegendData}
+                        populationURLs={populationURLs}
+                        sliderSettings={sliderSettings}
+                        countOrPercentage={countOrPercentage}
+                        setCountOrPercentage={setCountOrPercentage}
+                        setSliderSettings={setSliderSettings}
+                        selectedCounty={selectedCounty}
+                        setSelectedCounty={setSelectedCounty}
+                        setDataTitle={setDataTitle}
+                        queryVars={queryVars}
+                    />
+                    <div id="legend-corner">
+                        <h3>{dataTitle + ' '}
+                            (
+                            {queryVars.committed
+                                .sort((a, b) => a.group.localeCompare(b.group))
+                                .map(v => v.fullpath)
+                                .join(', ')}
+                            )
+                        </h3>
+                        {viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
+                        {viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
+                        {viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
+                    </div>
                 </div>
             </div>
             <div className="panel-container">
