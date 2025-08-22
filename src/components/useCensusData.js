@@ -17,7 +17,7 @@ export const paramToURL = (param, level, state = '*') => {
 export const fetchConceptGroups = async () => {
     try {
         // grab the data from our file
-        const response = await fetch('/variables.json');
+        const response = await fetch('./variables.json');
         const data = await response.json();
         const mappedData = Object.entries(data.variables).map(([key, value]) => ({
             concept: value.concept,
@@ -54,7 +54,7 @@ export const fetchConceptGroups = async () => {
 // when user selects a concept group, find the concepts that form it.
 export const findConcepts = async (keyVal) => {
     try {
-        const response = await fetch('/variables.json');
+        const response = await fetch('./variables.json');
         const data = await response.json();
 
         const filteredData = Object.entries(data.variables).filter(([key, value]) => key.startsWith(keyVal.slice(0, 3))); // the keyval should be only 3 chars, but slice anyway
@@ -134,7 +134,7 @@ const reduceConcepts = (concepts) => {
 
 export const findConceptsFromBase = async (keyVal) => {
     try {
-        const response = await fetch('/variables.json');
+        const response = await fetch('./variables.json');
         const data = await response.json();
 
         const filteredData = Object.entries(data.variables).filter(([key, value]) => key.startsWith(keyVal));
@@ -168,7 +168,7 @@ export const findConceptsFromBase = async (keyVal) => {
 // take the data from the keyVal set into an array of objects where the lines are split by '!!' delimiter
 const parseEntries = async (keyVal) => {
     try {
-        const response = await fetch('/variables.json');
+        const response = await fetch('./variables.json');
         const data = await response.json();
 
         const filteredData = Object.entries(data.variables).filter(([key, value]) => key.startsWith(keyVal));

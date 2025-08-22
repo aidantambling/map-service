@@ -79,67 +79,69 @@ const SettingsModal = ({ palettes, setSelectedPalette, selectedPalette }) => {
 
     return (
         <BaseModal dataTitle={"Color"} dataSubtitle={selectedPalette.name} open={open} handleOpen={handleOpen} handleClose={handleClose}>
-            <div className='modal-wrapper'>
-                <div className="modal-container">
-                    <div className="modal-header">
-                        <h2 className="modal-title">Select Your Map's Color Palette!</h2>
-                    </div>
-                    <button className="exit-button" onClick={handleClose}>
-                        <img src="x-button.png" alt="Close" />
-                    </button>
-                    <div className="palette-selection-bar">
-                        <button className={activeTab === 'preset' ? 'activeTab' : 'inactiveTab'} onClick={() => { setActiveTab('preset') }}>Preset color palettes</button>
-                        <button className={activeTab === 'custom' ? 'activeTab' : 'inactiveTab'} onClick={() => { setActiveTab('custom') }}>Create your own palette</button>
-                    </div>
-                    {activeTab === 'preset' ?
-                        <>
-                            {
-                                palettes && palettes.length > 0 ?
-                                    <>
-                                        {palettes.map((palette, index) => (
-                                            <button className={palette.id == selectedPalette.id ? 'selected-button' : ''} onClick={() => { changePalette(palette) }}>
-                                                <h3>{palette.name}</h3>
-                                                <div className='palette-colors'>
-                                                    {palette.colors.map((color, idx) => (
-                                                        <div key={idx} className='palette-color-box' style={{ backgroundColor: color }}></div>
-                                                    ))}
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </>
-                                    :
-                                    <></>
-                            }
-                        </>
-                        :
-                        <div className="custom-color-div">
-                            <ColorPicker color={color} onChange={handleColorChange} />
-                            {
-                                customColors && customColors.length > 0 ?
-                                    <div className='custom-color-right-side'>
-                                        <div className='custom-colors-container'>
-                                            {
-                                                customColors.map((color, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className={`selectable-color-box ${selectedBox === index ? 'selected' : ''}`}
-                                                        style={{ backgroundColor: color, width: '50px', height: '50px', margin: '5px', border: '1px solid #000' }}
-                                                        onClick={() => handleBoxClick(index)}
-                                                    >
-                                                        {color}
-                                                    </div>
-
-                                                ))
-                                            }
-
-                                        </div>
-                                        <button onClick={() => { setSelectedPalette(customColors) }}>Set As Active Palette</button>
-                                    </div>
-                                    :
-                                    <>No colors selected</>
-                            }
+            <div className="modal-positioner">
+                <div className='modal-wrapper'>
+                    <div className="modal-container">
+                        <div className="modal-header">
+                            <h2 className="modal-title">Select Your Map's Color Palette!</h2>
                         </div>
-                    }
+                        <button className="exit-button" onClick={handleClose}>
+                            <img src="x-button.png" alt="Close" />
+                        </button>
+                        <div className="palette-selection-bar">
+                            <button className={activeTab === 'preset' ? 'activeTab' : 'inactiveTab'} onClick={() => { setActiveTab('preset') }}>Preset color palettes</button>
+                            <button className={activeTab === 'custom' ? 'activeTab' : 'inactiveTab'} onClick={() => { setActiveTab('custom') }}>Create your own palette</button>
+                        </div>
+                        {activeTab === 'preset' ?
+                            <>
+                                {
+                                    palettes && palettes.length > 0 ?
+                                        <>
+                                            {palettes.map((palette, index) => (
+                                                <button className={palette.id == selectedPalette.id ? 'selected-button' : ''} onClick={() => { changePalette(palette) }}>
+                                                    <h3>{palette.name}</h3>
+                                                    <div className='palette-colors'>
+                                                        {palette.colors.map((color, idx) => (
+                                                            <div key={idx} className='palette-color-box' style={{ backgroundColor: color }}></div>
+                                                        ))}
+                                                    </div>
+                                                </button>
+                                            ))}
+                                        </>
+                                        :
+                                        <></>
+                                }
+                            </>
+                            :
+                            <div className="custom-color-div">
+                                <ColorPicker color={color} onChange={handleColorChange} />
+                                {
+                                    customColors && customColors.length > 0 ?
+                                        <div className='custom-color-right-side'>
+                                            <div className='custom-colors-container'>
+                                                {
+                                                    customColors.map((color, index) => (
+                                                        <div
+                                                            key={index}
+                                                            className={`selectable-color-box ${selectedBox === index ? 'selected' : ''}`}
+                                                            style={{ backgroundColor: color, width: '50px', height: '50px', margin: '5px', border: '1px solid #000' }}
+                                                            onClick={() => handleBoxClick(index)}
+                                                        >
+                                                            {color}
+                                                        </div>
+
+                                                    ))
+                                                }
+
+                                            </div>
+                                            <button onClick={() => { setSelectedPalette(customColors) }}>Set As Active Palette</button>
+                                        </div>
+                                        :
+                                        <>No colors selected</>
+                                }
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
         </BaseModal>

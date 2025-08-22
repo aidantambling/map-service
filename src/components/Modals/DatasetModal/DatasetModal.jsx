@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Carousel from 'react-multi-carousel';
 import 'react-multi-carousel/lib/styles.css';
 import { findConcepts } from "../../useCensusData";
@@ -6,11 +6,14 @@ import PropTypes from 'prop-types';
 import { useSpring, animated } from '@react-spring/web';
 import Modal from '@mui/material/Modal';
 import { Tooltip } from "@mui/material";
-import Grid from '@mui/material/Unstable_Grid2';
+import Grid from '@mui/material/Grid';
 import SpinnerLoader from "../../SpinnerLoader/SpinnerLoader";
 import { motion } from "motion/react"
 import "./DatasetModal.scss";
 import BaseModal from "../BaseModal/BaseModal";
+import Fuse from 'fuse.js'
+import TextField from '@mui/material/TextField';
+
 
 const Fade = React.forwardRef(function Fade(props, ref) {
     const {
@@ -67,6 +70,19 @@ const DatasetModal = React.forwardRef(function ModalDisplay(props, ref) {
     const [secondPosition, setSecondPosition] = useState({ x: 400, y: -1000 });
     const [loading, setLoading] = React.useState(true);
 
+    const [isFlipped, setIsFlipped] = useState(false);
+    const [isAnimating, setIsAnimating] = useState(false)
+
+    const handleFlip = (nameGroup) => {
+        if (!isAnimating) {
+            if (nameGroup) {
+                selectGridItem(nameGroup);
+            }
+            setIsAnimating(true);
+            setIsFlipped(prev => !prev);
+        }
+    }
+
     // handle opening/closing of modal(s)
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);
@@ -88,6 +104,7 @@ const DatasetModal = React.forwardRef(function ModalDisplay(props, ref) {
     const renderSuperConcepts = (form) => {
         const pullData = async () => {
             const c = await findConcepts(form.groupPrefix);
+            console.log(c);
             setSuperConcepts(c);
         }
         pullData();
@@ -114,121 +131,188 @@ const DatasetModal = React.forwardRef(function ModalDisplay(props, ref) {
         }, 1500)
     }
 
-    const handleDeslect = () => {
-        setBasePosition({ x: 0, y: 0 })
-        setSecondPosition({ x: 400, y: -1000 })
-    }
+    // const handleDeslect = () => {
+    //     setBasePosition({ x: 0, y: 0 })
+    //     setSecondPosition({ x: 400, y: -1000 })
+    // }
+
+    // const [terms, setTerms] = useState([]);
+    const fuseRef = useRef(null);
+    useEffect(() => {
+        const pullData = async () => {
+            const c = await findConcepts("B01");
+            console.log(c);
+            setTerms(c);
+            fuseRef.current = new Fuse(c, { keys: ["concept"], threshold: 0.3 });
+        };
+        pullData();
+    }, []);
+
+
+    const submitSearch = () => {
+        if (!fuseRef.current || !searchRef.current?.value) return;
+
+        const results = fuseRef.current.search(searchRef.current.value);
+        console.log(results.map(r => r.item)); // Extract actual matched items
+    };
+
+
+    const searchRef = useRef();
 
     return (
         <BaseModal dataTitle={'Dataset'} dataSubtitle={dataTitle} open={open} handleOpen={handleOpen} handleClose={handleClose}>
             <>
-                <motion.div
-                    layout="position"
-                    className="modal-wrapper"
-                    animate={{ x: basePosition.x, y: basePosition.y }}
-                    transition={{ type: 'spring', stiffness: 300 }}
-                >
-                    <div
-                        className="modal-container"
-                    >
-                        <div className="modal-header">
-                            <h2 className="modal-title">Change Dataset</h2>
-                        </div>
-                        <button className="exit-button" onClick={handleClose}>
-                            <img src="x-button.png" alt="Close" />
-                        </button>
-                        <div className="dataset-grid-container">
-                            <Grid container spacing={2}>
-                                {
-                                    // map the nameGroups to a grid of 41 items.
-                                    // conceptGroup field = name (e.g. Sex by Age). groupPrefix field = namegroup prefix (e.g. B01)
-                                    nameGroups.map((nameGroup, index) => (
-                                        <Grid item xs={4} key={index}>
-                                            <div className={'grid-item'}>
-                                                <Tooltip title={nameGroup.conceptGroup} PopperProps={{ style: { zIndex: 9999 } }}>
-                                                    <button onClick={() => selectGridItem(nameGroup)} className={nameGroup.conceptGroup === valWrapper.nameGroup ? 'dataset-class-button-selected' : 'dataset-class-button'}>
-                                                        {
-                                                            // truncate the group name length if necessary
-                                                            nameGroup.conceptGroup.length > 90 ?
-                                                                nameGroup.conceptGroup.slice(0, 87) + '...'
-                                                                :
-                                                                nameGroup.conceptGroup
+                <div className="modal-positioner">
+                    <div className="modal-wrapper" layout="position">
+                        <div className="modal-container">
+                            <div className="modal-header">
+                                <h2 className="modal-title">Change Dataset</h2>
+                            </div>
+                            <button className="exit-button" onClick={handleClose}>
+                                <img src="x-button.png" alt="Close" />
+                            </button>
+                            {
+                                isFlipped ? <button className="flip-button" onClick={handleFlip}>
+                                    <img src="x-button.png" alt="Close" />
+                                </button> :
+                                    <></>
+                            }
+                            <div className="flip-card">
+                                <motion.div className='flip-card-inner'
+                                    initial={false}
+                                    animate={{ rotateY: isFlipped ? 180 : 360 }}
+                                    transition={{ duration: 0.6, animationDirection: "normal" }}
+                                    onAnimationComplete={() => setIsAnimating(false)}>
+                                    <div className="card-front">
+                                        <div className="search-container">
+                                            <TextField id="standard-basic"
+                                                label="Enter cutoff"
+                                                size="small"
+                                                variant="outlined"
+                                                // defaultValue={sliderSettings.val}
+                                                inputRef={searchRef}
+                                                sx={{
+                                                    input: { color: 'white' }, // text color
+                                                    label: { color: 'white' }, // label color
+                                                    '& .MuiOutlinedInput-root': {
+                                                        '& fieldset': {
+                                                            borderColor: '#005790', // default border
+                                                        },
+                                                        '&:hover fieldset': {
+                                                            borderColor: '#005790', // hover border
+                                                        },
+                                                        '&.Mui-focused fieldset': {
+                                                            borderColor: '#005790', // focused border
+                                                        },
+                                                    },
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        submitSearch(); // ← your function
+                                                    }
+                                                }} />
+                                        </div>
+                                        <div className="dataset-grid-container">
+                                            <Grid container spacing={2}>
+                                                {
+                                                    // map the nameGroups to a grid of 41 items.
+                                                    // conceptGroup field = name (e.g. Sex by Age). groupPrefix field = namegroup prefix (e.g. B01)
+                                                    nameGroups.map((nameGroup, index) => (
+                                                        <React.Fragment key={index}>
+                                                            <Grid item xs={4} className='large-grid'>
+                                                                <div className={'grid-item'}>
+                                                                    <Tooltip title={nameGroup.conceptGroup} PopperProps={{ style: { zIndex: 9999 } }}>
+                                                                        <button onClick={() => handleFlip(nameGroup)} className={nameGroup.conceptGroup === valWrapper.nameGroup ? 'dataset-class-button' : 'dataset-class-button'}>
+                                                                            {
+                                                                                // truncate the group name length if necessary
+                                                                                nameGroup.conceptGroup.length > 90 ?
+                                                                                    nameGroup.conceptGroup.slice(0, 87) + '...'
+                                                                                    :
+                                                                                    nameGroup.conceptGroup
+                                                                            }
+                                                                        </button>
+                                                                    </Tooltip>
+                                                                </div>
+                                                            </Grid>
+                                                            <Grid item xs={4} spacing={1} className='small-grid'>
+                                                                <div className={'grid-item'}>
+                                                                    <Tooltip title={nameGroup.conceptGroup} PopperProps={{ style: { zIndex: 9999 } }}>
+                                                                        <button onClick={() => { handleFlip(nameGroup) }} className={nameGroup.conceptGroup === valWrapper.nameGroup ? 'dataset-class-button' : 'dataset-class-button'}>
+                                                                            {
+                                                                                // truncate the group name length if necessary
+                                                                                nameGroup.conceptGroup.length > 90 ?
+                                                                                    nameGroup.conceptGroup.slice(0, 87) + '...'
+                                                                                    :
+                                                                                    nameGroup.conceptGroup
+                                                                            }
+                                                                        </button>
+                                                                    </Tooltip>
+                                                                </div>
+                                                            </Grid>
+                                                        </React.Fragment>
+                                                    ))}
+                                            </Grid>
+                                        </div>
+                                    </div>
+                                    <div className='card-back'>
+                                        {!loading && superConcepts ?
+                                            // render the carousel for the given concepts
+                                            <div className="carousel-container">
+                                                <Carousel
+                                                    responsive={{
+                                                        desktop: {
+                                                            breakpoint: {
+                                                                max: 3000,
+                                                                min: 1024
+                                                            },
+                                                            items: 3,
+                                                            partialVisibilityGutter: 40
+                                                        },
+                                                        mobile: {
+                                                            breakpoint: {
+                                                                max: 464,
+                                                                min: 0
+                                                            },
+                                                            items: 1,
+                                                            partialVisibilityGutter: 30
+                                                        },
+                                                        tablet: {
+                                                            breakpoint: {
+                                                                max: 1024,
+                                                                min: 464
+                                                            },
+                                                            items: 2,
+                                                            partialVisibilityGutter: 30
                                                         }
-                                                    </button>
-                                                </Tooltip>
+                                                    }}
+                                                >
+                                                    {superConcepts?.map((tab, index) => (
+                                                        <button id={tab.concept} key={index} className={valWrapper.superconcept === tab.concept ? 'dataset-class-button-selected' : 'dataset-class-button'} onClick={() => {
+                                                            setValWrapper(prev => ({
+                                                                ...prev,
+                                                                group: tab.group,
+                                                                superconcept: tab.concept
+                                                            }))
+                                                        }}>{tab.concept}</button>
+                                                    ))}
+                                                </Carousel>
                                             </div>
-                                        </Grid>
-                                    ))}
-                            </Grid>
-                        </div>
-                    </div>
-                </motion.div>
-                <motion.div
-                    initial={false}
-                    className="modal-wrapper"
-                    animate={{ x: secondPosition.x, y: secondPosition.y }}
-                    transition={{ type: 'spring', stiffness: 300 }}
-                >
-                    <div className='modal-container'>
-                        <div className="modal-header">
-                            <h2 className='modal-title'>Change Dataset - {valWrapper.nameGroup}</h2>
-                        </div>
-                        <button className='exit-button' onClick={() => handleDeslect()}>
-                            <img src="x-button.png" />
-                        </button>
-                        {!loading && superConcepts ?
-                            // render the carousel for the given concepts
-                            <div className="carousel-container">
-                                <Carousel
-                                    responsive={{
-                                        desktop: {
-                                            breakpoint: {
-                                                max: 3000,
-                                                min: 1024
-                                            },
-                                            items: 3,
-                                            partialVisibilityGutter: 40
-                                        },
-                                        mobile: {
-                                            breakpoint: {
-                                                max: 464,
-                                                min: 0
-                                            },
-                                            items: 1,
-                                            partialVisibilityGutter: 30
-                                        },
-                                        tablet: {
-                                            breakpoint: {
-                                                max: 1024,
-                                                min: 464
-                                            },
-                                            items: 2,
-                                            partialVisibilityGutter: 30
+                                            :
+                                            // display loading spinner
+                                            <div className="spinner-container">
+                                                <SpinnerLoader showSpinner={loading} source={'spinner.svg'} />
+                                            </div>
                                         }
-                                    }}
-                                >
-                                    {superConcepts?.map((tab, index) => (
-                                        <button id={tab.concept} key={index} className={valWrapper.superconcept === tab.concept ? 'dataset-class-button-selected' : 'dataset-class-button'} onClick={() => {
-                                            setValWrapper(prev => ({
-                                                ...prev,
-                                                group: tab.group,
-                                                superconcept: tab.concept
-                                            }))
-                                        }}>{tab.concept}</button>
-                                    ))}
-                                </Carousel>
+                                        <div className="modal-buttons-container">
+                                            <button className="confirm-selection" onClick={() => { confirmSelection(); handleClose(); handleParentClose() }}>Confirm Selection</button>
+                                        </div>
+                                    </div>
+                                </motion.div>
                             </div>
-                            :
-                            // display loading spinner
-                            <div className="spinner-container">
-                                <SpinnerLoader showSpinner={loading} source={'spinner.svg'} />
-                            </div>
-                        }
-                        <div className="modal-buttons-container">
-                            <button className="confirm-selection" onClick={() => { confirmSelection(); handleClose(); handleParentClose() }}>Confirm Selection</button>
                         </div>
+
                     </div>
-                </motion.div>
+                </div>
             </>
         </BaseModal>
     );

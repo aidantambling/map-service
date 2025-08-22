@@ -155,7 +155,7 @@ const App = () => {
 
     // fetch the stored color palettes and set default
     const fetchColorPalettes = async () => {
-        const response = await fetch('/palettes.json');
+        const response = await fetch('./palettes.json');
         const data = await response.json();
         setPalettes(data);
         setSelectedPalette(data[0]);
@@ -288,7 +288,7 @@ const App = () => {
                             setDataTitle={setDataTitle}
                             queryVars={queryVars}
                         />
-                        <div id="legend-scale">
+                        <div id="legend-corner">
                             <h3>{dataTitle + ' '}
                                 (
                                 {queryVars.committed
@@ -305,9 +305,26 @@ const App = () => {
                 </div>
             </div>
             <div className="panel-container">
-                <div className="tooltips" id='tooltips'>
-                    <div className='tooltip' id='tooltip-county' ref={tooltipCountyRef}>Hover over a county</div>
-                    <div className='tooltip' id='tooltip-stat' ref={tooltipStatRef}>to see details!</div>
+                <div className="tooltip-legend">
+                    <div className="tooltips" id='tooltips'>
+                        <div className='tooltip' id='tooltip-county' ref={tooltipCountyRef}>Hover over a county</div>
+                        <div className='tooltip' id='tooltip-stat' ref={tooltipStatRef}>to see details!</div>
+                    </div>
+                    <div className="legend-section">
+                        <div>
+                            <h3>{dataTitle + ' '}
+                                (
+                                {queryVars.committed
+                                    .sort((a, b) => a.group.localeCompare(b.group))
+                                    .map(v => v.fullpath)
+                                    .join(', ')}
+                                )
+                            </h3>
+                            {viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
+                            {viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
+                            {viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
+                        </div>
+                    </div>
                 </div>
                 {/* We need to implement the description... */}
                 {/* <div id='description'>{dataDescription}</div> */}
