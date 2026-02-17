@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import 'react-multi-carousel/lib/styles.css';
 import PropTypes from 'prop-types';
 import { useSpring, animated } from '@react-spring/web';
+import IconButton from "@mui/material/IconButton";
+import CloseIcon from "@mui/icons-material/Close";
 import Modal from '@mui/material/Modal';
 import "./BaseModal.scss";
 
@@ -50,8 +52,9 @@ const BaseModal = React.forwardRef(function BaseModal({ dataTitle, dataSubtitle,
 
     // handle opening/closing of modal(s)
     return (
-        <div {...props} ref={ref} className='dataset-modal'>
-            <button onClick={handleOpen} className="dataset-modal-btn">
+        <div {...props} ref={ref} className='base-modal'>
+            {/* Physical button on screen that opens modal */}
+            <button onClick={handleOpen} className="base-modal-btn">
                 <p className='dm-button-title'>{dataTitle}</p>
                 <p className='dm-button-sub'>
                     {
@@ -63,6 +66,7 @@ const BaseModal = React.forwardRef(function BaseModal({ dataTitle, dataSubtitle,
                     }
                 </p>
             </button>
+            {/* Modal itself */}
             <Modal
                 open={open}
                 onClose={handleClose}
@@ -70,7 +74,17 @@ const BaseModal = React.forwardRef(function BaseModal({ dataTitle, dataSubtitle,
                 aria-describedby="modal-modal-description"
             >
                 <Fade in={open}>
-                    {children}
+                    <div className="base-modal-body">
+                        {children}
+                    </div>
+                    {/* <button
+                        type="button"
+                        aria-label="Close dialog"
+                        className="modal-close-btn"
+                        onClick={handleClose}
+                    >
+                        <CloseIcon />
+                    </button> */}
                 </Fade>
             </Modal>
         </div>

@@ -9,7 +9,7 @@ button {
 #mainContainer {
     display: grid;
     grid-template-columns: 1fr; // 75% canvas, 25% sidebar
-    grid-template-rows: 100px 125px 1fr 1fr; // Top row gets more height
+    grid-template-rows: 100px 125px 75px 1fr 1fr; // Top row gets more height
     width: 100%;
     min-height: 100vh;
     overflow-y: auto;
@@ -77,6 +77,45 @@ button {
         }
     }
 
+    .mobile-title-container {
+        display: flex;
+        align-items: center;
+        background-color: #111e35;
+
+        @media (min-width: 768px) {
+            display: none;
+        }
+
+        h3 {
+            color: white;
+            font-size: 1.4em;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        // .tooltips {
+        //     height: 100%;
+        //     width: 100%;
+        //     display: flex;
+        //     flex-direction: row;
+        //     justify-content: space-around;
+        //     align-items: center;
+        //     background-color: #2c3e50;
+
+        //     .tooltip {
+        //         display: flex;
+        //         align-items: center;
+        //         justify-content: center;
+        //         font-size: 0.8em;
+
+        //         @media (min-width: 768px) {
+        //             font-size: 1em;
+        //         }
+        //     }
+
+        // }
+    }
+
 }
 
 .canvas-container {
@@ -88,6 +127,7 @@ button {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    // max-height: 80%;
 
     #canvas-panel {
         width: 100%;
@@ -117,22 +157,26 @@ button {
             z-index: -5;
         }
 
-        #legend-corner {
+        .legend-corner {
             position: absolute;
             bottom: 10px;
             right: 10px;
 
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.6);
             color: white;
             padding: 5px 20px;
             border-radius: 5px;
             width: fit-content;
             z-index: 6;
-            // display: none;
-            display: block;
+            display: none;
 
             @media (min-width: 768px) {
-                background-color: red;
+                display: block;
+                max-width: 200px;
+            }
+
+            @media (min-width: 1024px) {
+                max-width: 300px
             }
 
             h3 {
@@ -224,43 +268,40 @@ button {
                     }
                 }
             }
-
         }
     }
-
 }
 
 .panel-container {
-    // grid-column: 2 / 3;
-    // grid-row: 2;
-    padding: 20px;
-    overflow-y: auto;
-
     background-color: #152238;
-    border-left: 2px solid #142231; // Match with canvas
+    border-left: 2px solid #142231;
+    padding: 20px;
+
+    @media (min-width: 768px) {
+        overflow-y: auto;
+    }
 
     .tooltip-legend {
-        display: flex;
-        align-items: center;
-
         .tooltips {
-            // just leaving a little comment here, because i'm giving up resolving it - space-btw/space-and are NOT working... uncomment the b-c: red; line and see what i mean. no clue why they're tripping.
-            // height: 15%;
-            // min-height: 15%;
-            // max-height: 15%;
-            flex: 2;
-            padding: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            align-items: center;
-            background-color: #2c3e50;
-            margin-bottom: 5%;
+            display: none;
+
+            @media (min-width: 768px) {
+                flex: 2;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: space-around;
+
+                background-color: #2c3e50;
+                margin-bottom: 5%;
+            }
 
             .tooltip {
                 display: flex;
+                flex-direction: column;
+                justify-content: space-around;
                 align-items: center;
-                justify-content: center;
                 font-size: 0.8em;
 
                 @media (min-width: 768px) {
@@ -270,97 +311,116 @@ button {
 
         }
 
+        // only renders when screen is narrow (e.g. mobile) => new section for legend (instead of map overlay)
         .legend-section {
-            flex: 1;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            align-items: stretch;
 
-            background-color: #152238;
-            color: white;
-            padding: 5px 20px;
-            width: 100%;
-
-            div {
-                h3 {
-                    color: white;
-                    width: none;
-                    text-align: left;
-                    font-size: 0.8em;
-                    width: 100%;
-                }
-
-                ul {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-
-                    .legend-element {
-                        display: flex;
-                        align-items: center;
-                        margin-bottom: 0.5rem;
-                        white-space: nowrap;
-                        font-size: 0.8em;
-                        overflow: hidden;
-                    }
-                }
-
-                .slider-reserve {
-                    position: relative;
-                    width: 100%;
-                    height: 100px;
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-
-                    .slider-wrapper {
-                        position: relative;
-                        width: 100%;
-                        height: 100%;
-                        margin-top: 25px;
-
-                        .slider-flex {
-                            display: flex;
-                            justify-content: space-around;
-                            align-items: center;
-                            position: absolute;
-                            width: 100%;
-                            height: 100%;
-                            top: 0;
-                            left: 0;
-                            z-index: 10;
-
-                            .range-fields {
-                                display: flex;
-                                flex-direction: column;
-                            }
-
-                            button {
-                                width: 15%;
-                                min-width: 15%;
-                                min-height: 50% !important;
-                                margin-bottom: 0 !important;
-                                height: 50% !important;
-                                padding: 10px;
-
-                                img {
-                                    height: 100%;
-                                    width: 100%;
-                                }
-                            }
-                        }
-                    }
-                }
-
-            }
-
-
+            // hide entire section when screen is wide
             @media (min-width: 768px) {
                 display: none;
             }
+
+            h3 {
+                display: none;
+                color: white;
+                font-size: 1.4em;
+                width: 100%;
+                margin: 10px 0;
+
+                @media (min-width: 768px) {
+                    display: block;
+                }
+            }
+
+            .content {
+                width: 100%;
+
+                ul {
+                    width: 100%;
+                    padding: 0;
+
+                    display: grid !important;
+                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                    gap: 8px 12px;
+                    justify-content: center;
+
+                    .legend-element {
+                        display: grid;
+                        grid-template-columns: 14px 1fr;
+                        align-items: center;
+                        gap: 8px;
+                        padding: 6px 10px;
+                        border-radius: 8px;
+                        background: rgba(255, 255, 255, .06);
+                        box-sizing: border-box;
+                        font-size: .9em;
+
+                        /* allow label to shrink inside its cell */
+                        min-width: 0;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+
+                        .legend-color-icon {
+                            width: 14px;
+                            height: 14px;
+                            border-radius: 3px;
+                            flex-shrink: 0;
+                        }
+                    }
+                }
+            }
+
+            // .slider-reserve {
+            //     position: relative;
+            //     width: 100%;
+            //     height: 100px;
+            //     display: flex;
+            //     flex-direction: column;
+            //     justify-content: center;
+
+            //     .slider-wrapper {
+            //         position: relative;
+            //         width: 100%;
+            //         height: 100%;
+            //         margin-top: 25px;
+
+            //         .slider-flex {
+            //             display: flex;
+            //             justify-content: space-around;
+            //             align-items: center;
+            //             position: absolute;
+            //             width: 100%;
+            //             height: 100%;
+            //             top: 0;
+            //             left: 0;
+            //             z-index: 10;
+
+            //             .range-fields {
+            //                 display: flex;
+            //                 flex-direction: column;
+            //             }
+
+            //             button {
+            //                 width: 15%;
+            //                 min-width: 15%;
+            //                 min-height: 50% !important;
+            //                 margin-bottom: 0 !important;
+            //                 height: 50% !important;
+            //                 padding: 10px;
+
+            //                 img {
+            //                     height: 100%;
+            //                     width: 100%;
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
         }
     }
-
 
     .sideMenu {
         margin-top: 20px;

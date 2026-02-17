@@ -2,14 +2,13 @@ body.active-modal {
     overflow-y: hidden;
 }
 
-// modal itself
-.dataset-modal {
+.base-modal {
     flex: 1;
     height: 100%;
     max-width: 30%;
 
     // button on main screen that opens modal
-    .dataset-modal-btn {
+    .base-modal-btn {
         display: flex;
         flex-direction: column;
         height: 100%;
@@ -50,6 +49,16 @@ body.active-modal {
     }
 }
 
+.base-modal-body {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1300;
+}
+
 .modal-positioner {
     position: fixed;
     top: 50%;
@@ -67,8 +76,44 @@ body.active-modal {
     // Each modal inside can still scroll independently
 }
 
-.modal-wrapper {
+.modal-close-btn {
+    /* wipe inherited button styles so it doesn't look like your tiles */
+    all: unset;
+    /* ← key line */
     position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, .30);
+    color: #fff;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(0, 0, 0, .45);
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, .6);
+    }
+
+    /* keep the X sized nicely regardless of global svg rules */
+    svg {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+.modal-close-btn:hover {
+    background: rgba(0, 0, 0, .35);
+}
+
+.modal-wrapper {
+    position: absolute !important;
 
     width: 90vw;
     max-width: 300px;

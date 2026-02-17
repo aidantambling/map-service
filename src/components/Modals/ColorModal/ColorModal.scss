@@ -4,80 +4,117 @@ h3 {
     text-align: center;
 }
 
-.palette-selection-bar {
-    margin-bottom: 10px;
-    display: flex;
-    flex-direction: row;
+.color-layout {
+    pointer-events: auto;
+    width: min(1000px, 80vw);
+    min-height: 84vh;
+    max-height: 84vh;
 
-    .activeTab {
-        background-color: red !important;
+    background: var(--dm-bg);
+    border: 1px solid var(--dm-border);
+    border-radius: 10px;
+    color: var(--dm-text);
+    padding: 32px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+
+
+    .palette-selection-bar {
+        flex: 1;
+        width: 100%;
+        display: flex;
+        justify-content: space-around;
+
+        button {
+            width: 400px;
+        }
+
+        .activeTab {
+            background-color: red !important;
+        }
+
+        .inactiveTab {}
     }
 
-    .inactiveTab {}
-}
+    .color-selection-section {
+        flex: 8;
 
-
-.selected-button {
-    background-color: #033c63 !important;
-}
-
-button {
-    display: flex !important;
-    flex-direction: row;
-    align-items: center !important;
-    justify-content: space-around;
-    background-color: #005790;
-    margin-bottom: 10px;
-
-    .palette-colors {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        .palette-color-box {
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-            border-radius: 4px;
+        .color-templates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 20px;
         }
     }
 }
 
-.custom-color-div {
+
+
+// .selected-button {
+//     background-color: #033c63 !important;
+// }
+
+// button {
+//     display: flex !important;
+//     flex-direction: row;
+//     align-items: center !important;
+//     justify-content: space-around;
+//     background-color: #005790;
+//     margin-bottom: 10px;
+
+.palette-colors {
     display: flex;
-    flex-direction: row;
     align-items: center;
-    justify-content: space-around;
+    justify-content: space-between;
 
-    .custom-color-right-side {
+    .palette-color-box {
+        width: 50px;
+        height: 50px;
         display: flex;
-        flex-direction: column;
         align-items: center;
-        justify-content: space-evenly;
-        height: 50%;
-
-        .custom-colors-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-around;
-            align-items: center;
-
-            .selectable-color-box {
-                width: 50px;
-                height: 50px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-size: 12px;
-                margin-right: 5px;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-        }
+        justify-content: center;
+        color: white;
+        font-size: 12px;
+        border-radius: 4px;
     }
 }
+
+// }
+
+// .custom-color-div {
+//     display: flex;
+//     flex-direction: row;
+//     align-items: center;
+//     justify-content: space-around;
+
+//     .custom-color-right-side {
+//         display: flex;
+//         flex-direction: column;
+//         align-items: center;
+//         justify-content: space-evenly;
+//         height: 50%;
+
+//         .custom-colors-container {
+//             display: flex;
+//             flex-direction: column;
+//             justify-content: space-around;
+//             align-items: center;
+
+//             .selectable-color-box {
+//                 width: 50px;
+//                 height: 50px;
+//                 display: flex;
+//                 align-items: center;
+//                 justify-content: center;
+//                 color: white;
+//                 font-size: 12px;
+//                 margin-right: 5px;
+//                 border-radius: 4px;
+//                 cursor: pointer;
+//             }
+//         }
+//     }
+// }

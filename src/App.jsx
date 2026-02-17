@@ -11,6 +11,8 @@ import './App.scss';
 import OverUnderUI from './components/RangeSlider/OverUnderUI';
 import RangeUI from './components/RangeSlider/RangeUI';
 import { UIContext } from './contexts/UIContext';
+import AudioPlayer from 'react-h5-audio-player';
+import 'react-h5-audio-player/lib/styles.css';
 
 const App = () => {
     const { viewingMode, comparisonMode, geographyMode, selectedPalette, setSelectedPalette, activeState } = useContext(UIContext);
@@ -24,6 +26,7 @@ const App = () => {
     // tooltip refs - passed to Canvas.jsx for value assignment based on mouse-over
     const tooltipCountyRef = useRef(null);
     const tooltipStatRef = useRef(null);
+    const isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0));
 
     // slider state values
     const [sliderSettings, setSliderSettings] = useState({
@@ -89,7 +92,7 @@ const App = () => {
         return (
             <ul>
                 {legendData.map((item, index) => (
-                    <li key={index} className="legend-element" id="legend-element">
+                    <li key={index} className="legend-element">
                         <span className="legend-color-icon" style={{ backgroundColor: item.color, flexShrink: 0, }}></span>
                         {item.label}
                     </li>
@@ -254,6 +257,11 @@ const App = () => {
     return (
         <div id="mainContainer">
             <div className="title-container">
+                <AudioPlayer
+                    autoPlay
+                    src="temp.mp3"
+                    onPlay={e => console.log("onPlay")}
+                />
                 <h2 id='title'>Census API Visualization Tool</h2>
             </div>
             <div className="settings-container">
@@ -264,6 +272,16 @@ const App = () => {
                     <ColorModal palettes={palettes} setSelectedPalette={setSelectedPalette} selectedPalette={selectedPalette} />
                     <DisplayModal />
                 </div>
+            </div>
+            <div className="mobile-title-container">
+                <h3>{dataTitle + ' '}
+                    (
+                    {queryVars.committed
+                        .sort((a, b) => a.group.localeCompare(b.group))
+                        .map(v => v.fullpath)
+                        .join(', ')}
+                    )
+                </h3>
             </div>
             <div className="canvas-container">
                 <div id="canvas-panel">
@@ -286,8 +304,9 @@ const App = () => {
                         setSelectedCounty={setSelectedCounty}
                         setDataTitle={setDataTitle}
                         queryVars={queryVars}
+                        isTouch={isTouch}
                     />
-                    <div id="legend-corner">
+                    <div className="legend-corner">
                         <h3>{dataTitle + ' '}
                             (
                             {queryVars.committed
@@ -304,24 +323,18 @@ const App = () => {
             </div>
             <div className="panel-container">
                 <div className="tooltip-legend">
-                    <div className="tooltips" id='tooltips'>
-                        <div className='tooltip' id='tooltip-county' ref={tooltipCountyRef}>Hover over a county</div>
-                        <div className='tooltip' id='tooltip-stat' ref={tooltipStatRef}>to see details!</div>
-                    </div>
                     <div className="legend-section">
-                        <div>
-                            <h3>{dataTitle + ' '}
-                                (
-                                {queryVars.committed
-                                    .sort((a, b) => a.group.localeCompare(b.group))
-                                    .map(v => v.fullpath)
-                                    .join(', ')}
-                                )
-                            </h3>
-                            {viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
-                            {viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
-                            {viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
-                        </div>
+                        <h3>{dataTitle + ' '}
+                            (
+                            {queryVars.committed
+                                .sort((a, b) => a.group.localeCompare(b.group))
+                                .map(v => v.fullpath)
+                                .join(', ')}
+                            )
+                        </h3>
+                        {viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
+                        {viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
+                        {viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
                     </div>
                 </div>
                 {/* We need to implement the description... */}

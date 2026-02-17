@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import * as d3 from 'd3';
-import { ButtonGroup } from '@mui/material';
-import * as topojson from 'topojson-client';
-import './canvas.scss';
-import { geoPath, geoAlbersUsa } from 'd3-geo';
-import VerticalToggleButtons from './VerticalToggleButtons';
 import { UIContext } from '../contexts/UIContext';
+import * as d3 from 'd3';
+import { geoPath, geoAlbersUsa } from 'd3-geo';
+import * as topojson from 'topojson-client';
 import { Button } from '@mui/base/Button';
+import MapControls from './MapControls/MapControls';
+import './canvas.scss';
 
-const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderSettings, countOrPercentage, setCountOrPercentage, setSliderSettings, selectedCounty, setSelectedCounty, setDataTitle, queryVars }) => {
+const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURLs, sliderSettings, countOrPercentage, setCountOrPercentage, setSliderSettings, selectedCounty, setSelectedCounty, setDataTitle, queryVars, isTouch }) => {
     const [countyData, setCountyData] = useState([]);
     const [populationData, setPopulationData] = useState([]);
     const [cutoffs, setCutoffs] = useState([]);
@@ -20,9 +19,36 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     const svgRef = useRef();
     const zoomRef = useRef();
 
-
     const zoomBehavior = d3.zoom()
         .scaleExtent([0.9, 8])
+        .filter((event) => {
+            // Block double-click zoom
+            if (event.type === 'dblclick') return false;
+
+            // Allow wheel zoom only with Ctrl/Cmd
+            if (event.type === 'wheel') return event.ctrlKey || event.metaKey;
+            // if (event.type === 'touchstart') return event.ctrlKey || event.metaKey;
+
+            // Allow mouse drag pan only with Ctrl/Cmd (left button)
+            if (event.type === 'mousedown') return (event.ctrlKey || event.metaKey) && event.button === 0;
+
+            // Touch: allow only when two fingers are down
+            if (event.type === 'touchstart' || event.type === 'touchmove') {
+                return (event.touches && event.touches.length >= 2) || event.ctrlKey || event.metaKey;
+            }
+
+            // Pointer-event path (most modern browsers use this instead of touchstart)
+            if (event.type === 'pointerdown' || event.type === 'pointermove') {
+                if (event.pointerType === 'touch') {
+                    // how many active touches are on this element?
+                    return d3.pointers(event, svgRef.current).length >= 2;
+                }
+                // mouse path already handled above
+                return event.ctrlKey || event.metaKey;
+            }
+
+            return false;
+        })
         .on('zoom', (event) => {
             d3.select(svgRef.current).select('g').attr('transform', event.transform);
         });
@@ -382,21 +408,17 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         return 'limegreen';
     };
 
-    // display county data (name, value) on mouse-over
     const handleMouseOver = (countyName, stat) => {
-        if (viewingMode === 'Inspect') return; // compare mode - forget mouseover
-        if (tooltipCountyRef.current && tooltipStatRef.current) {
-            tooltipCountyRef.current.textContent = countyName;
-            tooltipStatRef.current.textContent = stat;
-        }
+        if (viewingMode === 'Inspect') return;
+        tooltipCountyRef.current.textContent = countyName;
+        tooltipStatRef.current.textContent = stat;
     };
 
     const handleMouseOut = () => {
-        if (tooltipCountyRef.current && tooltipStatRef.current) {
-            tooltipCountyRef.current.textContent = 'Hover over a county';
-            tooltipStatRef.current.textContent = 'to see details!';
-        }
-    }
+        const resetText = isTouch ? 'Tap a county to see details!' : 'Hover over a county to see details!';
+        tooltipCountyRef.current.textContent = resetText;
+        tooltipStatRef.current.textContent = '';
+    };
 
     // if we're in compare mode, handle selection of county
     const handleClick = (countyName, countyID, stat) => {
@@ -481,31 +503,10 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
     const width = 960;
     const height = 600;
 
-    const zoomIn = () => {
-        d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy, 1.2);
-    };
-
-    const zoomOut = () => {
-        d3.select(svgRef.current).transition().call(zoomRef.current.scaleBy, 0.8);
-    };
-
-    const resetZoom = () => {
-        d3.select(svgRef.current).transition().call(zoomRef.current.transform, d3.zoomIdentity);
-    };
-
     const [path, setPath] = useState(null);
     const [translateX, setTranslateX] = useState(0);
     const [translateY, setTranslateY] = useState(0);
     const [scale, setScale] = useState(1);
-
-    const buttons = [
-        <button className="zoom-button" onClick={() => zoomIn()}>+</button>,
-        <button className="zoom-button" onClick={() => zoomOut()}>-</button>,
-        <button className="zoom-button" onClick={() => resetZoom()}>o</button>,
-    ];
-    const toggleButtons = [
-        <VerticalToggleButtons queryVars={queryVars} />
-    ]
 
     useEffect(() => {
         const projection = geoAlbersUsa()
@@ -528,15 +529,24 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
         setPath(() => pathGenerator);
     }, [countyData, width, height]);
 
+    useEffect(() => {
+        if (tooltipCountyRef.current) {
+            tooltipCountyRef.current.textContent =
+                isTouch ? 'Tap a county to see details!' : 'Hover over a county to see details!';
+        }
+        if (tooltipStatRef.current) {
+            tooltipStatRef.current.textContent = '';
+        }
+    }, [tooltipCountyRef, tooltipStatRef, isTouch]);
+
     return (
         <div className='map-container'>
-            <div className="lazy-name">
-                <ButtonGroup aria-label="Vertical button group" className="zoom-buttons">
-                    {buttons}
-                </ButtonGroup>
-                <ButtonGroup aria-label="Vertical button group" className="zoom-buttons">
-                    {toggleButtons}
-                </ButtonGroup>
+            <div className="map-toolbar">
+                <div className="info-bar" role="status" aria-live="polite">
+                    <strong ref={tooltipCountyRef} />
+                    <span ref={tooltipStatRef} />
+                </div>
+                <MapControls queryVars={queryVars} svgRef={svgRef} zoomRef={zoomRef} />
             </div>
             {activeState ?
                 <Button onClick={() => {
@@ -548,62 +558,68 @@ const Canvas = ({ tooltipCountyRef, tooltipStatRef, setLegendData, populationURL
                 :
                 <></>
             }
-            {/* <VerticalToggleButtons queryVars={queryVars} /> */}
-            <svg ref={svgRef} id="canvas" width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
-                <g transform={`translate(${translateX}, ${translateY}) scale(${scale})`}>
-                    {countyData.map((county, index) => {
-                        const id = county.id.toString();
-                        const countyItem = populationData.find(item => {
-                            let fipsCode
-                            if (geographyMode === 'US') {
-                                fipsCode = item[1].slice(-2);
-                            }
-                            else if ((geographyMode === 'CountySubdivision' || geographyMode === 'Place') && !activeState) {
-                                fipsCode = item[1].slice(-2);
-                            }
-                            else if (geographyMode === 'AIANNH') {
-                                fipsCode = item[1].slice(-4) + 'R'
-                            }
-                            else if (geographyMode === 'CountySubdivision') {
-                                fipsCode = item[1].slice(-10);
-                                // console.log(fipsCode);
-                                // console.log(id);
-                            }
-                            else if (geographyMode === 'Place') {
-                                fipsCode = item[1].slice(-7);
-                                // console.log(fipsCode);
-                                // console.log(id);
-                            }
-                            else if (geographyMode === 'County') {
-                                fipsCode = item[1].slice(-5);
-                            }
-                            else if (geographyMode === 'Region') {
-                                fipsCode = item[3];
-                            }
-                            else if (geographyMode === 'Division') {
-                                fipsCode = item[3];
-                            }
-                            return fipsCode === id;
-                        });
+            <div className="map-shell">
+                <svg
+                    ref={svgRef}
+                    id="canvas"
+                    viewBox={`0 0 ${960} ${600}`}
+                    preserveAspectRatio="xMidYMid meet"
+                >
+                    <g transform={`translate(${translateX}, ${translateY}) scale(${scale})`}>
+                        {countyData.map((county, index) => {
+                            const id = county.id.toString();
+                            const countyItem = populationData.find(item => {
+                                let fipsCode
+                                if (geographyMode === 'US') {
+                                    fipsCode = item[1].slice(-2);
+                                }
+                                else if ((geographyMode === 'CountySubdivision' || geographyMode === 'Place') && !activeState) {
+                                    fipsCode = item[1].slice(-2);
+                                }
+                                else if (geographyMode === 'AIANNH') {
+                                    fipsCode = item[1].slice(-4) + 'R'
+                                }
+                                else if (geographyMode === 'CountySubdivision') {
+                                    fipsCode = item[1].slice(-10);
+                                    // console.log(fipsCode);
+                                    // console.log(id);
+                                }
+                                else if (geographyMode === 'Place') {
+                                    fipsCode = item[1].slice(-7);
+                                    // console.log(fipsCode);
+                                    // console.log(id);
+                                }
+                                else if (geographyMode === 'County') {
+                                    fipsCode = item[1].slice(-5);
+                                }
+                                else if (geographyMode === 'Region') {
+                                    fipsCode = item[3];
+                                }
+                                else if (geographyMode === 'Division') {
+                                    fipsCode = item[3];
+                                }
+                                return fipsCode === id;
+                            });
 
-                        let countyVal = countyItem ? parseFloat(countyItem[2]) : null;
-                        let countyID = countyItem ? countyItem[1] : null;
+                            let countyVal = countyItem ? parseFloat(countyItem[2]) : null;
+                            let countyID = countyItem ? countyItem[1] : null;
 
-                        return (
-                            <path
-                                key={index}
-                                d={path(county)}
-                                className="county"
-                                fill={getColor(countyVal, countyID, sliderSettings.val, sliderSettings.val, sliderSettings.range, viewingMode)}
-                                onMouseOver={() => { handleMouseOver(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[2] : 'Unknown') }}
-                                onMouseOut={handleMouseOut}
-                                onClick={() => handleClick(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[1] : 'Unknown', countyItem ? countyItem[2] : 'Unknown')}
-                            />
-                        );
-                    })}
-                </g>
-            </svg>
+                            return (
+                                <path
+                                    key={index}
+                                    d={path(county)}
+                                    className="county"
+                                    fill={getColor(countyVal, countyID, sliderSettings.val, sliderSettings.val, sliderSettings.range, viewingMode)}
+                                    onMouseOver={() => { handleMouseOver(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[2] : 'Unknown') }}
+                                    onMouseOut={handleMouseOut}
+                                    onClick={() => handleClick(countyItem ? countyItem[0] : 'Unknown', countyItem ? countyItem[1] : 'Unknown', countyItem ? countyItem[2] : 'Unknown')}
+                                />
 
+                            );
+                        })}
+                    </g>
+                </svg>
+            </div>
         </div>
     );
 };

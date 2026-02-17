@@ -1,116 +1,103 @@
-import * as React from 'react';
-import { useContext } from 'react';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import { styled } from '@mui/material/styles';
-import './VerticalToggleButtons.scss'
-import Tooltip from '@mui/material/Tooltip';
-import { UIContext } from '../contexts/UIContext';
-import { FaArrowDown, FaArrowUp } from "react-icons/fa";
+import { useContext, useRef, useState, useEffect } from "react";
+import { Box, IconButton, ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { UIContext } from "../contexts/UIContext";
+import { FaArrowUp } from "react-icons/fa";
+import "./VerticalToggleButtons.scss";
 
+// opener IconButton
+const sx = {
+    width: { xs: 33, md: 44 },
+    height: { xs: 33, md: 44 },
+    borderRadius: 2,
+    bgcolor: "#1976d2",
+    color: "#fff",
+    p: 0,
+    "&:hover": { bgcolor: "#42a5f5" },
+    "& svg, & img": { width: "60%", height: "60%", display: "block", objectFit: "contain" },
+};
+
+// for CustomToggleButton (styled):
 const CustomToggleButton = styled(ToggleButton)(({ theme }) => ({
-    color: 'white',
-    backgroundColor: '#1976d2', // MUI primary blue
-    // border: '1px solid white',
-    borderRadius: '4px',
-    transition: 'all 0.2s ease-in-out',
-
-    '&.Mui-selected': {
-        backgroundColor: '#004ba0 !important', // darker blue for selected
-        color: '#fff',
-        // border: '2px solid #fff',   // thicker border
-        fontWeight: 'bold',
-    },
-
-    '&:hover': {
-        backgroundColor: '#42a5f5 !important', // lighter blue on hover
-    },
-
-    '&.Mui-selected:hover': {
-        backgroundColor: '#1565c0 !important',
+    width: 33, height: 33, minWidth: 33, minHeight: 33, padding: 0,
+    border: 0, borderRadius: 8, color: "#fff", backgroundColor: "#1976d2",
+    "&:hover": { backgroundColor: "#42a5f5 !important" },
+    "&.Mui-selected": { backgroundColor: "#004ba0 !important", fontWeight: "bold" },
+    "& svg, & img": { width: "60%", height: "60%", display: "block", objectFit: "contain" },
+    [theme.breakpoints.up("md")]: {
+        width: 44, height: 44, minWidth: 44, minHeight: 44,
     },
 }));
+export default function VerticalToggleButtons({ queryVars }) {
+    const { geographyMode, uiDispatch } = useContext(UIContext);
+    const [open, setOpen] = useState(false);
+    const wrapRef = useRef(null);
 
+    const modes = [
+        { id: "US", label: "US", img: "toggle_imgs/US.png" },
+        { id: "State", label: "State", img: "toggle_imgs/State.png" },
+        { id: "County", label: "County", img: "toggle_imgs/County.png" },
+        { id: "Region", label: "Region", img: "toggle_imgs/Region.png" },
+        { id: "Division", label: "Division", img: "toggle_imgs/Division.png" },
+        { id: "CountySubdivision", label: "County Subdivision", img: "toggle_imgs/CountySubdivision.png" },
+        { id: "Place", label: "Place", img: "toggle_imgs/Place.png" },
+        { id: "AIANNH", label: "American Indian, Alaskan Native, Native Hawaiaan", img: "toggle_imgs/AIANNH.png" },
+    ];
 
-const VerticalToggleButtons = ({ queryVars }) => {
-
-    const [view, setView] = React.useState('list');
-    const [arrowClicked, setArrowClicked] = React.useState(false);
-    const { uiDispatch } = useContext(UIContext);
-
-    const handleChange = (event, nextView) => {
-        console.log(queryVars);
-        // only support a change if variable(s) are selected
-
-        if (nextView === 'SelectButton') {
-            setArrowClicked(!arrowClicked);
-            return;
-        }
-
-        if (queryVars.current.length !== 0) {
-            if (nextView !== null) {
-                setView(nextView);
-                uiDispatch({
-                    type: 'SET_GEOGRAPHY_MODE',
-                    geographyMode: nextView,
-                })
-            }
-            setArrowClicked(false);
-        }
+    const handleModeChange = (_e, next) => {
+        if (next == null) return;
+        // if (queryVars.current.length === 0) return;
+        uiDispatch({ type: "SET_GEOGRAPHY_MODE", geographyMode: next });
+        setOpen(false);
     };
 
-    const baseButton = <Tooltip title="Select Geography Type" placement="right">
-        <CustomToggleButton value="SelectButton" aria-label="SelectButton">
-            <img src={`US.png`} className='toggle-img' />
-        </CustomToggleButton>
-    </Tooltip>
+    const onKeyDown = (e) => {
+        if (e.key === "Escape") setOpen(false);
+    };
 
-    const primaryGeographyTypes = ['US',
-        // 'State', 'County'
-    ].map((geoType) =>
-        <Tooltip title={geoType} placement="right">
-            <CustomToggleButton value={geoType} aria-label={geoType}>
-                <img src={`${geoType}.png`} className='toggle-img' />
-            </CustomToggleButton>
-        </Tooltip>
-    );
-    const secondaryGeographyTypes = ['US', 'State', 'County', 'Region', 'Division', 'CountySubdivision', 'Place', 'AIANNH'].map((geoType) =>
-        <Tooltip title={geoType} placement="right">
-            <CustomToggleButton value={geoType} aria-label={geoType}>
-                <img src={`${geoType}.png`} className='toggle-img' />
-            </CustomToggleButton>
-        </Tooltip>
-    );
+    const onBlur = (e) => {
+        const next = e.relatedTarget;
+        if (!wrapRef.current || !next || !wrapRef.current.contains(next)) setOpen(false);
+    };
 
     return (
-        <ToggleButtonGroup
-            orientation="vertical"
-            value={view}
-            exclusive
-            onChange={handleChange}
-            className="toggle-buttons"
-        >
-            {baseButton}
-            {
-                !arrowClicked ?
-                    <></>
-                    :
-                    <>
-                        {secondaryGeographyTypes}
-                        <Tooltip title="View Less" placement="right">
-                            <CustomToggleButton value="ViewLess" aria-label="Region">
-                                <FaArrowUp className='toggle-img' />
-                            </CustomToggleButton>
-                        </Tooltip>
-                    </>
-            }
-        </ToggleButtonGroup>
+        <Tooltip title={`${geographyMode} view (click to change)`} placement="right" enterDelay={400}>
+            <div ref={wrapRef} className="mode-wrap" onKeyDown={onKeyDown} onBlur={onBlur}>
+                <IconButton
+                    onClick={() => setOpen(o => !o)}
+                    aria-haspopup="menu"
+                    aria-expanded={open}
+                    aria-controls="geo-mode-panel"
+                    aria-label="Select Geography Type"
+                    sx={sx}
+                >
+                    <Box
+                        component="img"
+                        src={modes.find(m => m.id === geographyMode)?.img}
+                        alt=""
+                    />
+                </IconButton>
 
-
+                {open && (
+                    <ToggleButtonGroup
+                        id="geo-mode-panel"
+                        value={geographyMode}
+                        exclusive
+                        onChange={handleModeChange}
+                        orientation="vertical"
+                        aria-label="Geography type"
+                        className="mode-panel"
+                    >
+                        {modes.map(m => (
+                            <Tooltip title={m.label} placement="left" key={m.id}>
+                                <CustomToggleButton value={m.id} aria-label={m.label}>
+                                    <img src={m.img} alt="" />
+                                </CustomToggleButton>
+                            </Tooltip>
+                        ))}
+                    </ToggleButtonGroup>
+                )}
+            </div>
+        </Tooltip>
     );
 }
-
-export default VerticalToggleButtons;
