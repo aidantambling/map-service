@@ -1,71 +1,56 @@
-// .view-modal-container {
-//     position: fixed;
-//     width: 100vw;
-//     height: 100vh;
-//     max-width: 600px;
-//     max-height: 600px;
+.display-layout {
+    pointer-events: auto;
+    // width: min(1000px, 80vw);
+    min-height: 84vh;
+    max-height: 84vh;
 
-//     position: absolute;
-//     top: 50%;
-//     left: 50%;
-//     transform: translate(-50%, -50%) !important;
+    background: var(--dm-bg);
+    border: 1px solid var(--dm-border);
+    border-radius: 10px;
+    color: var(--dm-text);
+    padding: 32px;
 
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
 
-//     background: #f1f1f1;
-//     padding: 50px 90px;
-//     border-radius: 3px;
-//     overflow-y: auto !important;
-// }
+    .modal-body {
+        // background-color: green;
+        height: 90%;
+        width: 100%;
+        display: flex;
+        flex-direction: row;
 
-.modal-wrapper {
-    // background-color: red;
-
-    .modal-container {
-        // background-color: purple;
-
-        .modal-header {
-            // background-color: yellow;
+        .tabs {
+            // background-color: black;
         }
 
-        .modal-body {
-            // background-color: green;
-            height: 90%;
+        .tab {
             width: 100%;
-            display: flex;
-            flex-direction: row;
+            ;
+        }
 
-            .tabs {
-                // background-color: black;
+        .tab-panel {
+            // background-color: orange;
+            width: 90%;
+            max-width: 90% !important;
+            overflow-y: hidden;
+
+            h2 {
+                height: 20%;
             }
 
-            .tab {
+            p {
+                height: 20%;
+            }
+
+            img {
+                max-width: 100%;
+                max-height: 100%;
+            }
+
+            button {
                 width: 100%;
-                ;
-            }
-
-            .tab-panel {
-                // background-color: orange;
-                width: 90%;
-                max-width: 90% !important;
-                overflow-y: hidden;
-
-                h2 {
-                    height: 20%;
-                }
-
-                p {
-                    height: 20%;
-                }
-
-                img {
-                    max-width: 100%;
-                    max-height: 100%;
-                }
-
-                button {
-                    width: 100%;
-                    margin-top: 5%;
-                }
+                margin-top: 5%;
             }
         }
     }

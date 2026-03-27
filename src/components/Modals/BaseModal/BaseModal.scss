@@ -1,182 +1,182 @@
-body.active-modal {
-    overflow-y: hidden;
-}
+// body.active-modal {
+//     overflow-y: hidden;
+// }
 
-.base-modal {
-    flex: 1;
-    height: 100%;
-    max-width: 30%;
+// .base-modal {
+//     flex: 1;
+//     height: 100%;
+//     max-width: 30%;
 
-    // button on main screen that opens modal
-    .base-modal-btn {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        width: 100%;
-        align-items: center;
-        justify-content: space-evenly;
+//     // button on main screen that opens modal
+//     .base-modal-btn {
+//         display: flex;
+//         flex-direction: column;
+//         height: 100%;
+//         width: 100%;
+//         align-items: center;
+//         justify-content: space-evenly;
 
-        .dm-button-title {
-            display: block;
-            color: white;
-            font-size: 16px;
-            height: 25%;
-            margin: 0px;
+//         .dm-button-title {
+//             display: block;
+//             color: white;
+//             font-size: 16px;
+//             height: 25%;
+//             margin: 0px;
 
-            @media (min-width: 768px) {
-                font-size: 14px;
-            }
+//             @media (min-width: 768px) {
+//                 font-size: 14px;
+//             }
 
-            @media (min-width: 1024px) {
-                font-size: 16px;
-            }
-        }
+//             @media (min-width: 1024px) {
+//                 font-size: 16px;
+//             }
+//         }
 
-        .dm-button-sub {
-            color: rgb(255, 255, 255, 0.4);
-            font-size: 12px;
-            height: 25%;
-            margin: 0px;
+//         .dm-button-sub {
+//             color: rgb(255, 255, 255, 0.4);
+//             font-size: 12px;
+//             height: 25%;
+//             margin: 0px;
 
-            @media (min-width: 768px) {
-                font-size: 10px;
-            }
+//             @media (min-width: 768px) {
+//                 font-size: 10px;
+//             }
 
-            @media (min-width: 1024px) {
-                font-size: 12px;
-            }
-        }
-    }
-}
+//             @media (min-width: 1024px) {
+//                 font-size: 12px;
+//             }
+//         }
+//     }
+// }
 
-.base-modal-body {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 1300;
-}
+// .base-modal-body {
+//     position: fixed;
+//     inset: 0;
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//     pointer-events: none;
+//     z-index: 1300;
+// }
 
-.modal-positioner {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+// .modal-positioner {
+//     position: fixed;
+//     top: 50%;
+//     left: 50%;
+//     transform: translate(-50%, -50%);
 
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    pointer-events: none;
+//     width: 100vw;
+//     height: 100vh;
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//     overflow: hidden;
+//     pointer-events: none;
 
-    // Each modal inside can still scroll independently
-}
+//     // Each modal inside can still scroll independently
+// }
 
-.modal-close-btn {
-    /* wipe inherited button styles so it doesn't look like your tiles */
-    all: unset;
-    /* ← key line */
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 2;
-    width: 40px;
-    height: 40px;
-    display: grid;
-    place-items: center;
-    border-radius: 10px;
-    background: rgba(0, 0, 0, .30);
-    color: #fff;
-    cursor: pointer;
+// .modal-close-btn {
+//     /* wipe inherited button styles so it doesn't look like your tiles */
+//     all: unset;
+//     /* ← key line */
+//     position: absolute;
+//     top: 12px;
+//     right: 12px;
+//     z-index: 2;
+//     width: 40px;
+//     height: 40px;
+//     display: grid;
+//     place-items: center;
+//     border-radius: 10px;
+//     background: rgba(0, 0, 0, .30);
+//     color: #fff;
+//     cursor: pointer;
 
-    &:hover {
-        background: rgba(0, 0, 0, .45);
-    }
+//     &:hover {
+//         background: rgba(0, 0, 0, .45);
+//     }
 
-    &:focus-visible {
-        outline: 2px solid rgba(255, 255, 255, .6);
-    }
+//     &:focus-visible {
+//         outline: 2px solid rgba(255, 255, 255, .6);
+//     }
 
-    /* keep the X sized nicely regardless of global svg rules */
-    svg {
-        width: 22px;
-        height: 22px;
-    }
-}
+//     /* keep the X sized nicely regardless of global svg rules */
+//     svg {
+//         width: 22px;
+//         height: 22px;
+//     }
+// }
 
-.modal-close-btn:hover {
-    background: rgba(0, 0, 0, .35);
-}
+// .modal-close-btn:hover {
+//     background: rgba(0, 0, 0, .35);
+// }
 
-.modal-wrapper {
-    position: absolute !important;
+// // .modal-wrapper {
+// //     position: absolute !important;
 
-    width: 90vw;
-    max-width: 300px;
-    height: auto;
-    max-height: 70vh;
+// //     width: 90vw;
+// //     max-width: 300px;
+// //     height: auto;
+// //     max-height: 70vh;
 
-    background: #5e89d8;
-    padding: 1.5rem;
-    border-radius: 10px;
-    overflow-y: auto;
-    overflow-x: hidden;
+// //     background: #5e89d8;
+// //     padding: 1.5rem;
+// //     border-radius: 10px;
+// //     overflow-y: auto;
+// //     overflow-x: hidden;
 
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    pointer-events: auto;
+// //     display: flex;
+// //     flex-direction: column;
+// //     justify-content: flex-start;
+// //     align-items: center;
+// //     pointer-events: auto;
 
-    @media (min-width: 768px) {
-        max-width: 400px;
-    }
+// //     @media (min-width: 768px) {
+// //         max-width: 400px;
+// //     }
 
-    @media (min-width: 1024px) {
-        max-width: 600px;
-    }
+// //     @media (min-width: 1024px) {
+// //         max-width: 600px;
+// //     }
 
-    .modal-container {
-        width: 100%;
-        max-height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        overflow-y: auto;
+// //     .modal-container {
+// //         width: 100%;
+// //         max-height: 100%;
+// //         display: flex;
+// //         flex-direction: column;
+// //         align-items: center;
+// //         justify-content: flex-start;
+// //         overflow-y: auto;
 
-        .modal-header {
-            height: 10%;
-        }
+// //         .modal-header {
+// //             height: 10%;
+// //         }
 
-        .modal-title {
-            color: white;
-            font-size: 2em;
-            margin-top: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            text-align: center;
-            display: inline-block;
-        }
+// //         .modal-title {
+// //             color: white;
+// //             font-size: 2em;
+// //             margin-top: 0;
+// //             font-family: Arial, Helvetica, sans-serif;
+// //             text-align: center;
+// //             display: inline-block;
+// //         }
 
-        .exit-button {
-            padding: 0;
-            position: absolute;
-            top: 2%;
-            right: 2%;
-            border: none !important;
-            padding: 0 !important;
-            width: 40px;
-            height: 40px;
+// //         .exit-button {
+// //             padding: 0;
+// //             position: absolute;
+// //             top: 2%;
+// //             right: 2%;
+// //             border: none !important;
+// //             padding: 0 !important;
+// //             width: 40px;
+// //             height: 40px;
 
-            img {
-                height: 100%;
-                width: 100%;
-            }
+// //             img {
+// //                 height: 100%;
+// //                 width: 100%;
+// //             }
 
-        }
-    }
-}
+// //         }
+// //     }
+// // }

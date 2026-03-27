@@ -6,9 +6,9 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import 'react-multi-carousel/lib/styles.css';
 import "react-color-palette/css";
-import BaseModal from "../BaseModal/BaseModal";
 import "./DisplayModal.scss";
 import { UIContext } from "../../../contexts/UIContext";
+import ModalWrapper from "../Modal";
 
 function TabPanel(props) {
     const { children, value, index, ...other } = props;
@@ -197,27 +197,17 @@ const VerticalTabs = ({ }) => {
 }
 
 const DisplayModal = ({ }) => {
-    const [open, setOpen] = React.useState(false);
-    const handleOpen = () => setOpen(true);
-    const handleClose = () => setOpen(false);
     const { viewingMode } = useContext(UIContext);
 
     return (
-        <BaseModal dataTitle={"Display"} dataSubtitle={viewingMode} open={open} handleOpen={handleOpen} handleClose={handleClose}>
-            <div className='modal-wrapper'>
-                <div className="modal-container">
-                    <div className="modal-header">
-                        <h2 className="modal-title">Select Display Type</h2>
-                    </div>
-                    <button className="exit-button" onClick={handleClose}>
-                        <img src="x-button.png" alt="Close" />
-                    </button>
-                    <div className="modal-body">
-                        <VerticalTabs />
-                    </div>
+        <ModalWrapper title={"Select Display"}>
+            <div className="display-layout">
+                <h2 className="modal-title">Select Display Type</h2>
+                <div className="modal-body">
+                    <VerticalTabs />
                 </div>
             </div>
-        </BaseModal>
+        </ModalWrapper>
     );
 }
 

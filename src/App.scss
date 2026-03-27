@@ -6,28 +6,42 @@ button {
     }
 }
 
+.county:hover {
+    fill: black
+}
+
+g {
+    color: #FDF1E7
+}
+
+.TreeView {
+    color: white !important;
+}
+
 #mainContainer {
     display: grid;
-    grid-template-columns: 1fr; // 75% canvas, 25% sidebar
-    grid-template-rows: 100px 125px 75px 1fr 1fr; // Top row gets more height
     width: 100%;
     min-height: 100vh;
     overflow-y: auto;
 
+    // mobile screen: 1 column
+    grid-template-columns: 1fr;
+    grid-template-rows: 100px 125px 75px 1fr 1fr;
+
     @media (min-width: 768px) {
         max-height: 100vh; // no scroll on larger screens.
-        grid-template-columns: 9fr 4fr; // 75% canvas, 25% sidebar
-        grid-template-rows: 1fr 4fr; // Top row gets more height    
+        grid-template-columns: 9fr 4fr; // 9:4 canvas:sidebar ratio
+        grid-template-rows: 1fr 4fr; // 1:4 ratio  
     }
 
     .title-container {
         display: flex;
         align-items: center;
         justify-content: center;
-
-        font-size: 1em;
         text-align: center;
+
         background-color: #152238;
+        font-size: 1em;
 
         h2 {
             margin: 0;
@@ -35,12 +49,10 @@ button {
 
         @media (min-width: 768px) {
             font-size: 1.4em;
-            // background-color: red;
         }
 
         @media (min-width: 1024px) {
             font-size: 2em;
-            // background-color: purple;
         }
     }
 
@@ -53,19 +65,9 @@ button {
         justify-content: center;
         align-items: center;
 
-        @media (min-width: 768px) {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
+        @media (min-width: 768px) {}
 
-        @media (min-width: 1024px) {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
+        @media (min-width: 1024px) {}
 
         .modal-container {
             height: 75%;
@@ -82,6 +84,7 @@ button {
         align-items: center;
         background-color: #111e35;
 
+        // do not display unless on mobile
         @media (min-width: 768px) {
             display: none;
         }
@@ -116,398 +119,143 @@ button {
         // }
     }
 
-}
-
-.canvas-container {
-    background: rgb(21, 34, 56);
-    background: linear-gradient(22deg, #152238 0%, #2c3e50 48%, #23395d 100%);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    // max-height: 80%;
-
-    #canvas-panel {
-        width: 100%;
-        height: 100%;
+    .canvas-container {
+        background: linear-gradient(22deg, #152238 0%, #2c3e50 48%, #23395d 100%);
+        overflow: hidden;
         position: relative;
 
-        .tempDiv-high {
+        .spinner-box {
             position: absolute;
             height: 100%;
             width: 100%;
+            background: linear-gradient(22deg, rgba(21, 34, 56, 1) 0%, rgba(44, 62, 80, 1) 48%, rgba(35, 57, 93, 1) 100%);
+
+            // to center the spinner
             display: flex;
             align-items: center;
             justify-content: center;
-            // background-color: red;
-            background: rgb(21, 34, 56);
-            background: linear-gradient(22deg, rgba(21, 34, 56, 1) 0%, rgba(44, 62, 80, 1) 48%, rgba(35, 57, 93, 1) 100%);
-            z-index: 5;
-        }
-
-        .tempDiv-low {
-            position: absolute;
-            height: 100%;
-            width: 100%;
-            // background-color: red;
-            background: rgb(21, 34, 56);
-            background: linear-gradient(22deg, rgba(21, 34, 56, 1) 0%, rgba(44, 62, 80, 1) 48%, rgba(35, 57, 93, 1) 100%);
-            z-index: -5;
-        }
-
-        .legend-corner {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            padding: 5px 20px;
-            border-radius: 5px;
-            width: fit-content;
-            z-index: 6;
-            display: none;
-
-            @media (min-width: 768px) {
-                display: block;
-                max-width: 200px;
-            }
-
-            @media (min-width: 1024px) {
-                max-width: 300px
-            }
-
-            h3 {
-                color: white;
-                width: none;
-                text-align: left;
-                font-size: 0.6em;
-                width: 100%;
-
-                @media (min-width: 768px) {
-                    font-size: 0.8em
-                }
-            }
-
-            ul {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-
-                .legend-element {
-                    display: flex;
-                    align-items: center;
-                    margin-bottom: 0.5rem;
-                    white-space: nowrap;
-                    font-size: 0.6em;
-                    overflow: hidden;
-
-                    @media (min-width: 768px) {
-                        font-size: 0.8em
-                    }
-
-                    .legend-color-icon {
-                        width: 1rem;
-                        height: 1rem;
-                        margin-right: 0.35rem;
-
-                        @media (min-width: 768px) {
-                            width: 1.5rem;
-                            height: 1.5rem;
-                            margin-right: 0.5rem;
-                        }
-                    }
-                }
-            }
-
-            .slider-reserve {
-                position: relative;
-                width: 100%;
-                height: 100px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-
-                .slider-wrapper {
-                    position: relative;
-                    width: 100%;
-                    height: 100%;
-                    margin-top: 25px;
-
-                    .slider-flex {
-                        display: flex;
-                        justify-content: space-around;
-                        align-items: center;
-                        position: absolute;
-                        width: 100%;
-                        height: 100%;
-                        top: 0;
-                        left: 0;
-                        z-index: 10;
-
-                        .range-fields {
-                            display: flex;
-                            flex-direction: column;
-                        }
-
-                        button {
-                            width: 15%;
-                            min-width: 15%;
-                            min-height: 50% !important;
-                            margin-bottom: 0 !important;
-                            height: 50% !important;
-                            padding: 10px;
-
-                            img {
-                                height: 100%;
-                                width: 100%;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-.panel-container {
-    background-color: #152238;
-    border-left: 2px solid #142231;
-    padding: 20px;
-
-    @media (min-width: 768px) {
-        overflow-y: auto;
-    }
-
-    .tooltip-legend {
-        .tooltips {
-            display: none;
-
-            @media (min-width: 768px) {
-                flex: 2;
-                padding: 10px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: space-around;
-
-                background-color: #2c3e50;
-                margin-bottom: 5%;
-            }
-
-            .tooltip {
-                display: flex;
-                flex-direction: column;
-                justify-content: space-around;
-                align-items: center;
-                font-size: 0.8em;
-
-                @media (min-width: 768px) {
-                    font-size: 1em;
-                }
-            }
-
-        }
-
-        // only renders when screen is narrow (e.g. mobile) => new section for legend (instead of map overlay)
-        .legend-section {
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-
-            // hide entire section when screen is wide
-            @media (min-width: 768px) {
-                display: none;
-            }
-
-            h3 {
-                display: none;
-                color: white;
-                font-size: 1.4em;
-                width: 100%;
-                margin: 10px 0;
-
-                @media (min-width: 768px) {
-                    display: block;
-                }
-            }
-
-            .content {
-                width: 100%;
-
-                ul {
-                    width: 100%;
-                    padding: 0;
-
-                    display: grid !important;
-                    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                    gap: 8px 12px;
-                    justify-content: center;
-
-                    .legend-element {
-                        display: grid;
-                        grid-template-columns: 14px 1fr;
-                        align-items: center;
-                        gap: 8px;
-                        padding: 6px 10px;
-                        border-radius: 8px;
-                        background: rgba(255, 255, 255, .06);
-                        box-sizing: border-box;
-                        font-size: .9em;
-
-                        /* allow label to shrink inside its cell */
-                        min-width: 0;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-
-                        .legend-color-icon {
-                            width: 14px;
-                            height: 14px;
-                            border-radius: 3px;
-                            flex-shrink: 0;
-                        }
-                    }
-                }
-            }
-
-            // .slider-reserve {
-            //     position: relative;
-            //     width: 100%;
-            //     height: 100px;
-            //     display: flex;
-            //     flex-direction: column;
-            //     justify-content: center;
-
-            //     .slider-wrapper {
-            //         position: relative;
-            //         width: 100%;
-            //         height: 100%;
-            //         margin-top: 25px;
-
-            //         .slider-flex {
-            //             display: flex;
-            //             justify-content: space-around;
-            //             align-items: center;
-            //             position: absolute;
-            //             width: 100%;
-            //             height: 100%;
-            //             top: 0;
-            //             left: 0;
-            //             z-index: 10;
-
-            //             .range-fields {
-            //                 display: flex;
-            //                 flex-direction: column;
-            //             }
-
-            //             button {
-            //                 width: 15%;
-            //                 min-width: 15%;
-            //                 min-height: 50% !important;
-            //                 margin-bottom: 0 !important;
-            //                 height: 50% !important;
-            //                 padding: 10px;
-
-            //                 img {
-            //                     height: 100%;
-            //                     width: 100%;
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
         }
     }
 
-    .sideMenu {
-        margin-top: 20px;
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
+    .panel-container {
+        background-color: #152238;
+        border-left: 2px solid #142231;
+        padding: 20px;
         overflow: hidden;
 
-        .sideMenuContent {
-            background-color: rgb(16, 70, 95);
+        @media (min-width: 768px) {
+            overflow-y: auto;
+        }
+
+        .tooltip-legend {
+            // .tooltips {
+            //     display: none;
+
+            //     @media (min-width: 768px) {
+            //         flex: 2;
+            //         padding: 10px;
+            //         display: flex;
+            //         flex-direction: column;
+            //         align-items: center;
+            //         justify-content: space-around;
+
+            //         background-color: #2c3e50;
+            //         margin-bottom: 5%;
+            //     }
+
+            //     .tooltip {
+            //         display: flex;
+            //         flex-direction: column;
+            //         justify-content: space-around;
+            //         align-items: center;
+            //         font-size: 0.8em;
+
+            //         @media (min-width: 768px) {
+            //             font-size: 1em;
+            //         }
+            //     }
+
+            // }
+        }
+
+        .sideMenu {
+            margin-top: 20px;
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
-            overflow-y: auto;
+            overflow: hidden;
             overflow-x: hidden;
+            overflow-y: auto;
+            background-color: rgb(16, 70, 95);
 
-            h2 {
-                text-align: center;
-                font-size: 1.4em;
-
-                @media (min-width: 768px) {
-                    font-size: 1em;
-                }
-            }
-
-            .MuiTreeItem-label,
-            .MuiTreeItem-iconContainer,
-            .MuiTreeItem-checkbox {
-                color: white !important;
-            }
-
-            .MuiTreeItem-root:hover {
-                background-color: rgb(49, 83, 197);
-            }
-
-            .Mui-selected {
-                background-color: black;
-            }
-
-            .currently-viewing-box {
-                background-color: #2c3e50;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: space-around;
-                border-radius: 5px;
-                padding: 10px;
-                text-align: center;
+            .sideMenuContent {
+                // background-color: rgb(16, 70, 95);
+                // display: flex;
+                // flex-direction: column;
+                // flex-grow: 1;
+                // overflow-y: auto;
+                // overflow-x: hidden;
 
                 h2 {
-                    font-size: 20px;
-                    width: 100%;
-                    padding: 10px 0px 10px 0px;
-                    border-radius: 10px;
+                    text-align: center;
+                    font-size: 1.4em;
+
+                    @media (min-width: 768px) {
+                        font-size: 1em;
+                    }
                 }
 
-                .query-vars-box {
-                    background-color: #34495e;
+                .MuiTreeItem-label,
+                .MuiTreeItem-iconContainer,
+                .MuiTreeItem-checkbox {
                     color: white !important;
-                    padding: 10px;
-                    font-size: 14px;
-                    text-align: left;
-                    border-radius: 10px;
-                    border: 2px solid rgb(4, 30, 65);
                 }
+
+                .MuiTreeItem-root:hover {
+                    background-color: rgb(49, 83, 197);
+                }
+
+                .Mui-selected {
+                    background-color: black;
+                }
+
+                .currently-viewing-box {
+                    background-color: #2c3e50;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: space-around;
+                    border-radius: 5px;
+                    padding: 10px;
+                    text-align: center;
+
+                    h2 {
+                        font-size: 20px;
+                        width: 100%;
+                        padding: 10px 0px 10px 0px;
+                        border-radius: 10px;
+                    }
+
+                    .query-vars-box {
+                        background-color: #34495e;
+                        color: white !important;
+                        padding: 10px;
+                        font-size: 14px;
+                        text-align: left;
+                        border-radius: 10px;
+                        border: 2px solid rgb(4, 30, 65);
+                    }
+
+                    button {
+                        margin-top: 10px;
+                    }
+                }
+
 
                 button {
-                    margin-top: 10px;
+                    margin-bottom: 5px;
                 }
-            }
-
-
-            button {
-                margin-bottom: 5px;
             }
         }
     }
-}
-
-.county:hover {
-    fill: black
-}
-
-g {
-    color: #FDF1E7
-}
-
-.TreeView {
-    color: white !important;
 }

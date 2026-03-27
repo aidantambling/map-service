@@ -1,0 +1,125 @@
+            // only renders when screen is narrow (e.g. mobile) => new section for legend (instead of map overlay)
+            .legend-section {
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+
+                // hide entire section when screen is wide
+                @media (min-width: 768px) {
+                    display: none;
+                }
+
+                h3 {
+                    display: none;
+                    color: white;
+                    font-size: 1.4em;
+                    width: 100%;
+                    margin: 10px 0;
+
+                    @media (min-width: 768px) {
+                        display: block;
+                    }
+                }
+
+                .content {
+                    width: 100%;
+
+                    ul {
+                        width: 100%;
+                        padding: 0;
+
+                        display: grid !important;
+                        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                        gap: 8px 12px;
+                        justify-content: center;
+
+                        .legend-element {
+                            display: grid;
+                            grid-template-columns: 14px 1fr;
+                            align-items: center;
+                            gap: 8px;
+                            padding: 6px 10px;
+                            border-radius: 8px;
+                            background: rgba(255, 255, 255, .06);
+                            box-sizing: border-box;
+                            font-size: .9em;
+
+                            /* allow label to shrink inside its cell */
+                            min-width: 0;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+
+                            .legend-color-icon {
+                                width: 14px;
+                                height: 14px;
+                                border-radius: 3px;
+                                flex-shrink: 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .legend-corner {
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+
+                background-color: rgba(0, 0, 0, 0.6);
+                padding: 5px 20px;
+                border-radius: 5px;
+                width: fit-content;
+                z-index: 6;
+                display: none;
+
+                @media (min-width: 768px) {
+                    display: block;
+                    max-width: 200px;
+                }
+
+                @media (min-width: 1024px) {
+                    max-width: 300px
+                }
+
+                h3 {
+                    text-align: left;
+                    font-size: 0.6em;
+                    width: 100%;
+
+                    @media (min-width: 768px) {
+                        font-size: 0.8em
+                    }
+                }
+
+                ul {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+
+                    .legend-element {
+                        display: flex;
+                        align-items: center;
+                        margin-bottom: 0.5rem;
+                        white-space: nowrap;
+                        font-size: 0.6em;
+                        overflow: hidden;
+
+                        @media (min-width: 768px) {
+                            font-size: 0.8em
+                        }
+
+                        .legend-color-icon {
+                            width: 1rem;
+                            height: 1rem;
+                            margin-right: 0.35rem;
+
+                            @media (min-width: 768px) {
+                                width: 1.5rem;
+                                height: 1.5rem;
+                                margin-right: 0.5rem;
+                            }
+                        }
+                    }
+                }
+            }

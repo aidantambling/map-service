@@ -1,123 +1,96 @@
-import { motion } from "motion/react"
 import { useState } from "react";
-import RangeSlider from './RangeSlider';
-import TextField from '@mui/material/TextField';
+import { motion, wrap } from "motion/react"
+import Slider from '@mui/material/Slider';
+import AnimatedInputSwitch from "./AnimatedInputSwitch";
 
 const RangeUI = ({ lowRangeRef, highRangeRef, sliderSettings, setSliderSettings }) => {
-    const [basePosition, setBasePosition] = useState({
-        x: 0, y: 0,
-    })
-    const [secondPosition, setSecondPosition] = useState({
-        x: 500, y: 0,
-    })
+    const items = [1, 2];
+    const [selectedItem, setSelectedItem] = useState(items[0]);
+    const [direction, setDirection] = useState(1);
 
-    const transitionToText = () => {
-        setBasePosition({ x: 500, y: 0 });
-        setSecondPosition({ x: 0, y: 0 });
+    function setSlide(newDirection) {
+        const nextItem = wrap(1, items.length + 1, selectedItem + newDirection);
+        setSelectedItem(nextItem);
+        setDirection(newDirection);
     }
 
-    const rangeTransitionToSlider = (shouldUpdate) => {
-        if (shouldUpdate) {
-            // user clicked check => set the slider val
-            const newLow = Number(lowRangeRef.current?.value);
-            const newHigh = Number(highRangeRef.current?.value);
-            console.log(newHigh, newLow);
-            if (!isNaN(newHigh) && !isNaN(newLow)) {
-                const newRange = newLow <= newHigh ? [newLow, newHigh] : [newHigh, newLow];
-                setSliderSettings(prev => ({
-                    ...prev,
-                    range: newRange
-                }));
-            }
-        }
-        else {
-            // user clicked x => reset the text val
-            setTimeout(() => {
-                if (highRangeRef.current) {
-                    highRangeRef.current.value = sliderSettings.range[0];
-                }
-                if (lowRangeRef.current) {
-                    lowRangeRef.current.value = sliderSettings.range[1];
-                }
-            }, 2000)
-        }
+    const handleSliderChange = (event, newValue) => {
+        setSliderSettings(prev => ({
+            ...prev,
+            range: newValue
+        }));
 
-        requestAnimationFrame(() => {
-            setSecondPosition({ x: 0, y: 500 });
-            setBasePosition({ x: 0, y: 0 });
+        if (lowRangeRef.current) lowRangeRef.current.value = newValue[0];
+        if (highRangeRef.current) highRangeRef.current.value = newValue[1];
+    };
+
+    const handleInputChange = (index) => (event) => {
+        const value = Number(event.target.value);
+
+        setSliderSettings(prev => {
+            const nextRange = [...prev.range];
+            nextRange[index] = value;
+
+            if (lowRangeRef.current) lowRangeRef.current.value = nextRange[0];
+            if (highRangeRef.current) highRangeRef.current.value = nextRange[1];
+
+            return {
+                ...prev,
+                range: nextRange
+            };
         });
-    }
+    };
+
+    const color = selectedItem === 1 ? "#0cdcf7" : "#005790";
 
     return (
         <>
-            <div className="slider-reserve">
-                <div className="slider-wrapper">
-                    <motion.div
-                        className="slider-flex"
-                        animate={{ x: basePosition.x, y: basePosition.y }}
-                        transition={{ type: 'spring', stiffness: 300 }}
-                    >
-                        <button onClick={transitionToText} style={{ marginRight: '5%' }}>
-                            <img src='white_text.png' />
-                        </button>
-                        <RangeSlider max={sliderSettings.max} step={sliderSettings.step} range={sliderSettings.range} setSliderSettings={setSliderSettings} lowRangeRef={lowRangeRef} highRangeRef={highRangeRef} />
-                    </motion.div>
-                    <motion.div
-                        className="slider-flex"
-                        animate={{ x: secondPosition.x, y: secondPosition.y }}
-                        transition={{ type: 'spring', stiffness: 300 }}
-                    >
-                        <button onClick={() => rangeTransitionToSlider(false)} style={{ marginRight: '5%' }}>
-                            <img src='white_x.png' />
-                        </button>
-                        <div className="range-fields">
-                            <TextField id="standard-basic"
-                                label="Enter lower boundary"
-                                size="small"
-                                variant="outlined"
-                                inputRef={lowRangeRef}
-                                sx={{
-                                    input: { color: 'white' }, // text color
-                                    label: { color: 'white' }, // label color
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: '#005790', // default border
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: '#005790', // hover border
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: '#005790', // focused border
-                                        },
-                                    },
-                                }} />
-                            <TextField id="standard-basic"
-                                label="Enter upper boundary"
-                                size="small"
-                                variant="outlined"
-                                inputRef={highRangeRef}
-                                sx={{
-                                    input: { color: 'white' }, // text color
-                                    label: { color: 'white' }, // label color
-                                    '& .MuiOutlinedInput-root': {
-                                        '& fieldset': {
-                                            borderColor: '#005790', // default border
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: '#005790', // hover border
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: '#005790', // focused border
-                                        },
-                                    },
-                                }} />
-                        </div>
-                        <button onClick={() => rangeTransitionToSlider(true)} style={{ marginLeft: '5%' }}>
-                            <img src='white_checkmark.png' />
-                        </button>
-                    </motion.div>
-                </div>
-            </div>
+            <AnimatedInputSwitch color={color} setSlide={setSlide} direction={direction} selectedItem={selectedItem}>
+                <motion.div
+                    className="slider-inputs"
+                    key={selectedItem}
+                    initial={{ opacity: 0, x: direction * 50 }}
+                    animate={{
+                        opacity: 1,
+                        x: 0,
+                        transition: {
+                            type: "spring",
+                            bounce: 0.35,
+                            duration: 0.3
+                        }
+                    }}
+                    exit={{ opacity: 0, x: direction * -50 }}
+                >
+                    {selectedItem === 1 ? (
+                        <>
+                            <input
+                                ref={lowRangeRef}
+                                type="number"
+                                value={sliderSettings.range[0]}
+                                onChange={handleInputChange(0)}
+                            />
+                            <input
+                                ref={highRangeRef}
+                                type="number"
+                                value={sliderSettings.range[1]}
+                                onChange={handleInputChange(1)}
+                            />
+
+                        </>
+                    ) : (
+                        <>
+                            <Slider
+                                aria-label="Default"
+                                valueLabelDisplay="on"
+                                value={sliderSettings.range}
+                                max={sliderSettings.max}
+                                step={sliderSettings.step}
+                                onChange={handleSliderChange}
+                            />
+                        </>
+                    )}
+                </motion.div>
+            </AnimatedInputSwitch>
         </>
     )
 }

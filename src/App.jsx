@@ -8,11 +8,11 @@ import TreeView from './components/TreeView/TreeView';
 import { Tooltip } from '@mui/material';
 import SpinnerLoader from './components/SpinnerLoader/SpinnerLoader';
 import './App.scss';
-import OverUnderUI from './components/RangeSlider/OverUnderUI';
-import RangeUI from './components/RangeSlider/RangeUI';
 import { UIContext } from './contexts/UIContext';
-import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
+import Legend from './components/Legend';
+import Modal from './components/Modals/Modal';
+import ModalWrapper from './components/Modals/Modal';
 
 const App = () => {
     const { viewingMode, comparisonMode, geographyMode, selectedPalette, setSelectedPalette, activeState } = useContext(UIContext);
@@ -36,10 +36,6 @@ const App = () => {
         range: [0, 0], // for RangeSlider
         // inspectVal: 0, // for InspectSlider
     })
-    const overUnderRef = useRef();
-    const lowRangeRef = useRef();
-    const highRangeRef = useRef();
-    const inspectRef = useRef();
 
     const [dataTitle, setDataTitle] = useState("Total Population");
     const [title, setTitle] = useState('Sex by Age => Total Population')
@@ -83,78 +79,6 @@ const App = () => {
         committed: []
     })
 
-    useEffect(() => {
-        console.log(queryVars);
-    }, [queryVars])
-
-    // load only the legend for quartile view
-    function renderQuartileData() {
-        return (
-            <ul>
-                {legendData.map((item, index) => (
-                    <li key={index} className="legend-element">
-                        <span className="legend-color-icon" style={{ backgroundColor: item.color, flexShrink: 0, }}></span>
-                        {item.label}
-                    </li>
-                ))}
-            </ul>
-        )
-    }
-
-    // load the legend (same as quartile view - the legend has alr been updated via useEffect in Canvas.jsx), and load the slider itself as well
-    function renderSliderData() {
-        return (
-            <>
-                {renderQuartileData()}
-                {comparisonMode === 'overUnder' ? (
-                    <OverUnderUI
-                        overUnderRef={overUnderRef}
-                        sliderSettings={sliderSettings}
-                        setSliderSettings={setSliderSettings}
-                        val={sliderSettings.val}
-                    />
-                ) : (
-                    <RangeUI
-                        lowRangeRef={lowRangeRef}
-                        highRangeRef={highRangeRef}
-                        sliderSettings={sliderSettings}
-                        setSliderSettings={setSliderSettings}
-                    />
-                )}
-            </>
-        )
-    }
-
-    function renderInspectData() {
-        return (
-            <>
-                <h5>{selectedCounty.countyName}</h5>
-                <h5>{selectedCounty.stat}</h5>
-                <h5>
-                    {
-                        (selectedCounty && selectedCounty?.wikiLink) ?
-                            <a href={selectedCounty.wikiLink}>Learn more about this county!</a>
-                            :
-                            <p>Select a county to color in the map!</p>
-                    }
-                </h5>
-                {renderQuartileData()}
-                {comparisonMode === 'Range' ?
-                    <OverUnderUI
-                        overUnderRef={inspectRef}
-                        sliderSettings={{
-                            ...sliderSettings,
-                            max: sliderSettings.max / 2,
-                            step: sliderSettings.step / 2
-                        }}
-                        setSliderSettings={setSliderSettings}
-                    />
-                    :
-                    <></>
-                }
-            </>
-        );
-    }
 
     // fetch the stored color palettes and set default
     const fetchColorPalettes = async () => {
@@ -232,7 +156,6 @@ const App = () => {
         else {
             popURLs = queryVars.current.map(queryVar => paramToURL(queryVar.group, geographyMode));
         }
-        console.log(popURLs);
         setPopulationURLs(popURLs);
 
         // update the legend to reflect the selected concepts
@@ -257,11 +180,6 @@ const App = () => {
     return (
         <div id="mainContainer">
             <div className="title-container">
-                <AudioPlayer
-                    autoPlay
-                    src="temp.mp3"
-                    onPlay={e => console.log("onPlay")}
-                />
                 <h2 id='title'>Census API Visualization Tool</h2>
             </div>
             <div className="settings-container">
@@ -273,6 +191,7 @@ const App = () => {
                     <DisplayModal />
                 </div>
             </div>
+            {/* On mobile, we have a unique section above the canvas for title display */}
             <div className="mobile-title-container">
                 <h3>{dataTitle + ' '}
                     (
@@ -284,57 +203,36 @@ const App = () => {
                 </h3>
             </div>
             <div className="canvas-container">
-                <div id="canvas-panel">
-                    <div className={canvasLoading ? 'tempDiv-low' : 'tempDiv-high'}>
-                        {canvasLoading ?
-                            <></>
-                            :
-                            <SpinnerLoader showSpinner={true} source={'spinner2.svg'} />}
-                    </div>
-                    <Canvas
-                        tooltipCountyRef={tooltipCountyRef}
-                        tooltipStatRef={tooltipStatRef}
-                        setLegendData={setLegendData}
-                        populationURLs={populationURLs}
-                        sliderSettings={sliderSettings}
-                        countOrPercentage={countOrPercentage}
-                        setCountOrPercentage={setCountOrPercentage}
-                        setSliderSettings={setSliderSettings}
-                        selectedCounty={selectedCounty}
-                        setSelectedCounty={setSelectedCounty}
-                        setDataTitle={setDataTitle}
-                        queryVars={queryVars}
-                        isTouch={isTouch}
-                    />
-                    <div className="legend-corner">
-                        <h3>{dataTitle + ' '}
-                            (
-                            {queryVars.committed
-                                .sort((a, b) => a.group.localeCompare(b.group))
-                                .map(v => v.fullpath)
-                                .join(', ')}
-                            )
-                        </h3>
-                        {viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
-                        {viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
-                        {viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
-                    </div>
+                {/* if canvas is loading, spinner should render above it until rendering is complete */}
+                <div className="spinner-box" style={{ zIndex: canvasLoading ? -5 : 5 }}>
+                    {canvasLoading ?
+                        <></>
+                        :
+                        <SpinnerLoader showSpinner={true} source={'spinner2.svg'} />}
+                </div>
+                <Canvas
+                    tooltipCountyRef={tooltipCountyRef}
+                    tooltipStatRef={tooltipStatRef}
+                    setLegendData={setLegendData}
+                    populationURLs={populationURLs}
+                    sliderSettings={sliderSettings}
+                    countOrPercentage={countOrPercentage}
+                    setCountOrPercentage={setCountOrPercentage}
+                    setSliderSettings={setSliderSettings}
+                    selectedCounty={selectedCounty}
+                    setSelectedCounty={setSelectedCounty}
+                    setDataTitle={setDataTitle}
+                    queryVars={queryVars}
+                    isTouch={isTouch}
+                />
+                <div className="legend-corner">
+                    <Legend dataTitle={dataTitle} queryVars={queryVars} viewingMode={viewingMode} comparisonMode={comparisonMode} legendData={legendData} sliderSettings={sliderSettings} setSliderSettings={setSliderSettings} />
                 </div>
             </div>
             <div className="panel-container">
                 <div className="tooltip-legend">
                     <div className="legend-section">
-                        <h3>{dataTitle + ' '}
-                            (
-                            {queryVars.committed
-                                .sort((a, b) => a.group.localeCompare(b.group))
-                                .map(v => v.fullpath)
-                                .join(', ')}
-                            )
-                        </h3>
-                        {viewingMode === 'Quartile' && <div className="content" style={{ height: '100%' }}>{renderQuartileData()}</div>}
-                        {viewingMode === 'Slider' && <div className="content" style={{ height: '100%' }}>{renderSliderData()}</div>}
-                        {viewingMode === 'Inspect' && <div className="content" style={{ height: '100%' }}>{renderInspectData()}</div>}
+                        <Legend dataTitle={dataTitle} queryVars={queryVars} viewingMode={viewingMode} comparisonMode={comparisonMode} legendData={legendData} sliderSettings={sliderSettings} setSliderSettings={setSliderSettings} />
                     </div>
                 </div>
                 {/* We need to implement the description... */}
@@ -342,25 +240,25 @@ const App = () => {
                 <div className="sideMenu">
                     <div className="sideMenuContent">
                         <h2>Search Assistant</h2>
-                        {
-                            (
-                                <>
-                                    <TreeView concepts={concepts} setQueryVars={setQueryVars} />
-                                    {
-                                        concepts ?
-                                            <button onClick={() => {
-                                                queryAPI();
-                                            }}>Submit</button>
-                                            :
-                                            <></>
-                                    }
-                                </>
-                            )
-                        }
+                        {(
+                            <>
+                                <TreeView concepts={concepts} setQueryVars={setQueryVars} />
+                                {
+                                    concepts ?
+                                        <button onClick={() => {
+                                            queryAPI();
+                                        }}>
+                                            Submit
+                                        </button>
+                                        :
+                                        <></>
+                                }
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Grid from "@mui/material/Grid";
-import { Tooltip, Accordion, AccordionSummary, AccordionDetails, Button, CircularProgress } from "@mui/material";
+import { Tooltip, Accordion, AccordionSummary, AccordionDetails, Button, CircularProgress, Modal } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import BaseModal from "../BaseModal/BaseModal";
+import ModalWrapper from "../Modal";
 import { findConcepts } from "../../useCensusData";
 import "./DatasetModal.scss";
 
@@ -47,20 +48,10 @@ const DatasetModal = ({ nameGroups, renderConcepts, dataTitle, setDataTitle, set
     };
 
     return (
-        <BaseModal
-            dataTitle="Dataset"
-            dataSubtitle={dataTitle}
-            open={open}
-            handleOpen={handleOpen}
-            handleClose={handleClose}
-        >
+        <ModalWrapper title={"Select Dataset"}>
             <div className="dataset-layout">
-                <div>
-                    <p className="para paragraph">Testing element</p>
-                    <p className="para paragraph">Testing element</p>
-                </div>
                 <div className="tier1-column">
-                    <div className="tier-heading">Browse categories</div>
+                    <h1 className="tier-heading">Browse categories</h1>
                     <div className="tier1-grid">
                         {nameGroups?.map((ng, idx) => (
                             <Tooltip title={ng.conceptGroup}>
@@ -76,9 +67,9 @@ const DatasetModal = ({ nameGroups, renderConcepts, dataTitle, setDataTitle, set
                 </div>
 
                 <div className="tier2-column">
-                    <div className="tier-heading">
+                    <h1 className="tier-heading">
                         {selectedT1 ? selectedT1.conceptGroup : "Pick a category"}
-                    </div>
+                    </h1>
 
                     {loading && (
                         <div className="tier2-loading">
@@ -120,7 +111,7 @@ const DatasetModal = ({ nameGroups, renderConcepts, dataTitle, setDataTitle, set
                     )}
                 </div>
             </div>
-        </BaseModal>
+        </ModalWrapper>
     );
 };
 

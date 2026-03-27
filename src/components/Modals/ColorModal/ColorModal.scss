@@ -1,12 +1,16 @@
-h3 {
-    width: 100px;
-    margin-right: 10px;
-    text-align: center;
+:root {
+    --dm-bg: #152238;
+    --dm-bg-elev: #1b2d48;
+    --dm-border: #0e1b2f;
+    --dm-tile: #005790;
+    --dm-accent: #8e44ad;
+    --dm-text: #ffffff;
+    --dm-muted: rgba(255, 255, 255, .75);
 }
 
 .color-layout {
     pointer-events: auto;
-    width: min(1000px, 80vw);
+    // width: min(1000px, 80vw);
     min-height: 84vh;
     max-height: 84vh;
 
@@ -17,24 +21,26 @@ h3 {
     padding: 32px;
 
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
 
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
 
 
     .palette-selection-bar {
-        flex: 1;
-        width: 100%;
+        width: 30%;
         display: flex;
-        justify-content: space-around;
+        flex-direction: column;
+        background-color: var(--dm-bg-elev);
 
         button {
-            width: 400px;
+            height: 70px;
+            font-size: 1.5em;
         }
 
         .activeTab {
-            background-color: red !important;
+            background-color: var(--dm-accent) !important;
+            box-shadow: 0 0 0 3px rgba(142, 68, 173, .25);
         }
 
         .inactiveTab {}
@@ -45,25 +51,42 @@ h3 {
 
         .color-templates-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            padding: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
             gap: 20px;
+
+            button {
+                height: 140px;
+                width: 125px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                background-color: var(--dm-bg) !important;
+                text-align: center;
+                // background-color: white !important;
+
+                .palette-colors {
+                    height: 80%;
+                    width: 100%;
+                    max-width: 125px;
+                    display: flex;
+                    flex-direction: column;
+
+                    .palette-color-box {
+                        width: 100%;
+                        border-radius: 0px;
+                    }
+                }
+
+                h3 {
+                    color: white !important;
+                    text-align: center;
+                    font-size: 1.4em;
+                }
+            }
         }
     }
 }
-
-
-
-// .selected-button {
-//     background-color: #033c63 !important;
-// }
-
-// button {
-//     display: flex !important;
-//     flex-direction: row;
-//     align-items: center !important;
-//     justify-content: space-around;
-//     background-color: #005790;
-//     margin-bottom: 10px;
 
 .palette-colors {
     display: flex;
@@ -82,39 +105,48 @@ h3 {
     }
 }
 
-// }
+.custom-color-div {
+    height: 100%;
+    max-height: 100%;
 
-// .custom-color-div {
-//     display: flex;
-//     flex-direction: row;
-//     align-items: center;
-//     justify-content: space-around;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    box-sizing: border-box;
 
-//     .custom-color-right-side {
-//         display: flex;
-//         flex-direction: column;
-//         align-items: center;
-//         justify-content: space-evenly;
-//         height: 50%;
+    .rcp-root {
+        width: 100%;
+    }
 
-//         .custom-colors-container {
-//             display: flex;
-//             flex-direction: column;
-//             justify-content: space-around;
-//             align-items: center;
+    .custom-colors-container {
+        display: flex;
 
-//             .selectable-color-box {
-//                 width: 50px;
-//                 height: 50px;
-//                 display: flex;
-//                 align-items: center;
-//                 justify-content: center;
-//                 color: white;
-//                 font-size: 12px;
-//                 margin-right: 5px;
-//                 border-radius: 4px;
-//                 cursor: pointer;
-//             }
-//         }
-//     }
-// }
+        .selectable-color-box {
+            width: 100px;
+            height: 100px;
+            margin: 5px;
+            border: 1px solid #000;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            h3 {
+                font-size: 1.4em;
+            }
+        }
+
+        .selected {
+            width: 125px;
+            height: 125px;
+        }
+    }
+
+    button {
+        height: 40px;
+        width: 150px;
+        font-size: 1.4em;
+    }
+}
